@@ -18,6 +18,21 @@ def compute(frames: Union[list, np.ndarray],
             dt: int = 1,
             search_area_size: int = 32,
             sig2noise_method: str = "peak2peak"):
+    """
+    if len(frames) > 2: run it in parallel
+    else: run it just as it is
+    
+    Args:
+        frames:
+        window_size:
+        overlap:
+        dt:
+        search_area_size:
+        sig2noise_method:
+
+    Returns:
+
+    """
     if len(frames) == 2:  # we can compute it directly
         results = _compute(*frames,
                            window_size=window_size,

@@ -10,5 +10,4 @@ setup(
     url="TODO",
     packages=find_packages(),
     install_requires=[i.strip() for i in open("requirements.txt").readlines()],
-    test_suit="tests"
 )

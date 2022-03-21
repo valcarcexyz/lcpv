@@ -1,0 +1,14 @@
+from concurrent.futures import ProcessPoolExecutor
+
+def run():
+    """
+    Run all experiments
+    """
+    pass
+
+def main():
+    import os
+    print(os.system("which python"))
+
+if __name__ == "__main__":
+    main()

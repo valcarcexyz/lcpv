@@ -15,7 +15,7 @@ class Corrector:
     def __init__(self):
         pass
 
-    def correct(self, img:np.ndarray, camera:dict=None):
+    def correct_lens(self, img:np.ndarray, camera:dict=None):
         """
         Corrects the lens distortion of an image given the camera distortion 
         properties in `camera`. Those parameters, can be obtained via 
@@ -49,6 +49,13 @@ class Corrector:
         # crop the image to select the correction
         x, y, w, h = roi
         return dst[y:y+h, x:x+w]
+
+    def correct_perspective(self, img, points:dict):
+        """
+        points = {"original_points": [], "target_points": []}
+        """
+        # TODO: decide how to implement it!
+
 
 
 if __name__ == "__main__":

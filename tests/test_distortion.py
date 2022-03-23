@@ -11,7 +11,7 @@ def run(original_image:np.ndarray):
     Shows the correction of an image to test whether it is working or not.
     """
     corrector = Corrector()
-    corrected_image = corrector.correct(original_image, corrector.HQ_CAMERA)
+    corrected_image = corrector.correct_lens(original_image, corrector.HQ_CAMERA)
     
     fig, axs = plt.subplots(2, 1)
     axs[0].imshow(original_image, cmap = "gray")

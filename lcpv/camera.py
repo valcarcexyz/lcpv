@@ -9,7 +9,6 @@ import io
 
 class Camera:
     def __init__(self,
-                 max_frames:int=0,
                  resolution:tuple=(1920, 1080),
                  framerate:int = 24):
         # store the important values
@@ -22,7 +21,7 @@ class Camera:
         self.camera.framerate = self.framerate
 
         # create the queu where the objects will be stored
-        self.queue = queue.Queue(maxsize=max_frames)
+        self.queue = queue.Queue(maxsize=0)
 
     def start_recording(self, how_long:int=10):
         """
@@ -40,6 +39,7 @@ class Camera:
             yield self.queue.queue[0]
             self.queue.mutex.release()
         else:
+            print("There are no frames yet")
             time.sleep(0.01)
             self.get_frames()
 
@@ -66,6 +66,7 @@ class Camera:
 
 if __name__ == "__main__":
     camera = Camera()
+    camera.camera.close()
     
 
     

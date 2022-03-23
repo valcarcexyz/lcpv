@@ -3,3 +3,7 @@ venv/
 
 # pycharm
 .idea/
+
+# pycache
+__pycache__/
+lcpv/__pycache__/

@@ -4,9 +4,9 @@ import cv2
 class Corrector:
 
     HQ_CAMERA = {
-        "mtx": np.array([[5.17073738e+03, 0.00000000e+00, 2.86684263e+03],
-                        [0.00000000e+00, 4.30752724e+03, 1.13125773e+03],
-                        [0.00000000e+00, 0.00000000e+00, 1.00000000e+00]]),
+        "mtx": np.array([[5170.73738,         0., 2866.84263],
+                         [0.,         4307.52724, 1131.25773],
+                         [0.,                 0.,         1.]]),
         "dst": np.array([[-0.85745244,  0.05168725,  0.10194636, -0.10056902, -0.04326248]]),
         "rvecs": np.array([[-0.95357458],[-0.23090414],[-0.14895711]]),
         "tvecs": np.array([[-3.69480464],[-0.12774038],[ 8.80394152]])
@@ -15,7 +15,7 @@ class Corrector:
     def __init__(self):
         pass
 
-    def correct(self, img:np.ndarray, camera:dict=self.HQ_CAMERA):
+    def correct(self, img:np.ndarray, camera:dict=None):
         """
         Corrects the lens distortion of an image given the camera distortion 
         properties in `camera`. Those parameters, can be obtained via 
@@ -38,12 +38,14 @@ class Corrector:
 
         [1]: https://docs.opencv.org/3.4/dc/dbb/tutorial_py_calibration.html
         """
+        if not camera: # no correction to be done
+            return
         h,  w = img.shape[:2]
         newmtx, roi = cv2.getOptimalNewCameraMatrix(camera["mtx"], 
-                                                    camera["dist"], 
+                                                    camera["dst"], 
                                                     (w,h), 1, (w,h))
 
-        dst = cv2.undistort(img, mtx, dist, None, newmtx)
+        dst = cv2.undistort(img, camera["mtx"], camera["dst"], None, newmtx)
         # crop the image to select the correction
         x, y, w, h = roi
         return dst[y:y+h, x:x+w]

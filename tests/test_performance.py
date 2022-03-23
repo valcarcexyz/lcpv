@@ -20,7 +20,7 @@ def lens_correction(img, runs:int = 10):
     corrector = Corrector()
     start = time.time()
     for _ in range(runs):
-        corrector.correct(img)
+        corrector.correct(img, corrector.HQ_CAMERA)
     end = time.time()
     time_per_run = (end - start) / runs
     return time_per_run

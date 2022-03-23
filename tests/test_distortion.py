@@ -7,6 +7,9 @@ import cv2
 import time
 
 def run(original_image:np.ndarray):
+    """
+    Shows the correction of an image to test whether it is working or not.
+    """
     corrector = Corrector()
     corrected_image = corrector.correct(original_image, corrector.HQ_CAMERA)
     
@@ -22,6 +25,4 @@ def run(original_image:np.ndarray):
 
 if __name__ == "__main__":
     img = cv2.imread("../data/original_image.bmp", 0)
-    # plt.imshow(img, cmap="gray")
-    # plt.show()
     run(img)

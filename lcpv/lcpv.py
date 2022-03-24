@@ -24,7 +24,7 @@ class LCPV:
                 frames = self._acquire_frames()
                 futures.append(executor.submit(self._run_computation, frames))
         camera_process.join()
-        self.camera.close()
+        self.camera.camera.close()
 
     def _run_computation(self, frames):
         """"""

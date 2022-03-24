@@ -33,7 +33,6 @@ class Camera:
         self.camera.capture_sequence(self._buffer(how_long),
                                     "yuv",
                                     use_video_port=True,)
-        self.camera.close()
         self.running = False
 
     def get_frames(self):

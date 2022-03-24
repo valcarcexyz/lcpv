@@ -21,9 +21,14 @@ class LCPV:
         futures = []
         with ProcessPoolExecutor(max_workers=self.NUM_CORES-1) as executor:
             while self.camera.running:
-                frames = self._acquire_frames()
-                futures.append(executor.submit(self._run_computation, frames))
+                futures=[]
+                for _ in range(self.NUM_CORES-1):
+                    frames = self._acquire_frames()
+                    futures.append(executor.submit(self._run_computation, frames))
+                [future.result() for future in futures]
         camera_process.join()
+
+    def close(self):
         self.camera.camera.close()
 
     def _run_computation(self, frames):

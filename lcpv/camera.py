@@ -27,10 +27,12 @@ class Camera:
         """
         How many seconds to record (it is an approximation)
         """
+        self.running = True
         self.camera.capture_sequence(self._buffer(how_long),
                                     "yuv",
                                     use_video_port=True,)
         self.camera.close()
+        self.running = False
 
     def get_frames(self):
         if self.queue.qsize >= 2:
@@ -40,7 +42,7 @@ class Camera:
             self.queue.mutex.release()
         else:
             print("There are no frames yet")
-            time.sleep(0.01)
+            time.sleep(0.05)
             self.get_frames()
 
     def _buffer(self, seconds:int=1) -> None:

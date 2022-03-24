@@ -23,11 +23,13 @@ class Camera:
         # create the queu where the objects will be stored
         self.queue = queue.Queue(maxsize=0)
 
+        # to run until camera destroyed
+        self.running = True
+
     def start_recording(self, how_long:int=10):
         """
         How many seconds to record (it is an approximation)
         """
-        self.running = True
         self.camera.capture_sequence(self._buffer(how_long),
                                     "yuv",
                                     use_video_port=True,)
@@ -35,7 +37,7 @@ class Camera:
         self.running = False
 
     def get_frames(self):
-        if self.queue.qsize >= 2:
+        if self.queue.qsize() >= 2:
             yield self.queue.get()
             self.queue.mutex.acquire()
             yield self.queue.queue[0]

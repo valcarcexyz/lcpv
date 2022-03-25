@@ -1,10 +1,5 @@
 from concurrent.futures import ProcessPoolExecutor
-from multiprocessing import Process
-import multiprocessing
-from camera import Camera
-from particle_velocimetry import compute
-import os
-
+from .particle_velocimetry import compute
 from .lens_correction import Corrector
 import multiprocessing as mp
 from queue import Queue
@@ -36,7 +31,7 @@ class LCPV:
             self.camera = camera
         self.openpiv_args = kwargs
 
-        
+        self.output = [] # where we will store the x, y, u, v
 
     def start(self, resolution:tuple=(1920, 1080), 
               framerate:int=24, 
@@ -46,6 +41,31 @@ class LCPV:
         **kwargs => openpiv args"""
         if self._capture(resolution, framerate, framerate*seconds):
             print("Captured correctly")
+            futures = []
+            with ProcessPoolExecutor() as executor:
+                while True:
+                    self.queue.mutex.acquire()
+                    if self.queue.qsize() >= 2:
+                        frame0 = self.queue.get()
+                        frame1 = self.queue.queue[0] # so we do not remove it
+                        print("We got 2 frames to process")
+                    else:
+                        print("Last iteration!")
+                        for future in futures:
+                            self.output.append(future.result())
+                        break # we will have ended
+
+                    self.queue.mutex.release()
+
+                    print("Submitting jobs!")
+                    # we can submit the job
+                    futures.append(
+                        executor.submit(compute,
+                                        [frame0, frame1], 
+                                        **self.openpiv_args)
+                    )
+            print(f"We have a total of {len(self.output)}")
+
 
     def _capture(self, resolution:tuple, framerate:int, frames:int):
         """Creates the camera object and calls the self.buffers"""
@@ -81,43 +101,3 @@ if __name__ == "__main__":
         search_area_size=32,
         overlap=16
     )
-
-class _LCPV:
-    NUM_CORES = multiprocessing.cpu_count()
-
-    def __init__(self, resolution:tuple, framerate:int, *args, **kwargs):
-        self.camera = Camera(resolution=resolution, framerate=framerate)
-        self.openpiv_args = kwargs
-        self.results = [] # it is thread safe, so we can use it to store the results
-
-    def start(self, seconds:int=10):
-        camera_process = Process(target = self.camera.start_recording, args=(seconds,))
-        camera_process.start()
-
-        # run the computation
-        futures = []
-        with ProcessPoolExecutor(max_workers=self.NUM_CORES-1) as executor:
-            while self.camera.running:
-                futures=[]
-                for _ in range(self.NUM_CORES-1):
-                    frames = self._acquire_frames()
-                    futures.append(executor.submit(self._run_computation, frames))
-                [future.result() for future in futures]
-        camera_process.join()
-
-    def close(self):
-        self.camera.camera.close()
-
-    def _run_computation(self, frames):
-        """"""
-        compute(frames, self.results, self.openpiv_args)
-        return
-
-    def _acquire_frames(self):
-        """Get 2 new frames to start processing"""
-        return list(self.camera.get_frames())
-
-
-
-if __name__ == "__main__":
-    l = LCPV((1920, 1080), 24, window_size=32, overlap=16, search_area_size=32)

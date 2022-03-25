@@ -1,5 +1,5 @@
 import numpy as np 
-import cv2
+import cv2 # sudo apt install python3-opencv
 
 class Corrector:
 

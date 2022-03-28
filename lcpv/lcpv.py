@@ -3,10 +3,12 @@ from .particle_velocimetry import compute
 from .lens_correction import Corrector
 import multiprocessing as mp
 from queue import Queue
+from PIL import Image
 import numpy as np
 import picamera
 import time
 import io
+import os
 
 class LCPV:
     """"""
@@ -14,7 +16,9 @@ class LCPV:
 
     def __init__(self, resolution:tuple=(1920, 1080),
             framerate:int = 24, correct_distortion:bool=True,
-            camera:dict = None, *args, **kwargs):
+            camera:dict = None, 
+            write:bool=False, path:str="~/frames/",
+            *args, **kwargs):
         """Builds the queue to output the data
         
         if `correct_distortion`, `camera` argument config must be provided, 
@@ -30,16 +34,23 @@ class LCPV:
             self.corrector = Corrector()
             self.camera = camera
         self.openpiv_args = kwargs
+        self.write = write
+        
+        if write:
+            self.path = path
+            # check if frames folder exists
+            if not os.path.exists(path):
+                os.makedirs(path)
 
         self.output = [] # where we will store the x, y, u, v
 
-    def start(self, resolution:tuple=(1920, 1080), 
-              framerate:int=24, 
-              seconds:int=1, 
+    def start(self,
+              seconds:int=1,
+              write:bool=False,
               *args, **kwargs):
         """Runs the experiment
         **kwargs => openpiv args"""
-        if self._capture(resolution, framerate, framerate*seconds):
+        if self._capture():
             print("Captured correctly")
             futures = []
             with ProcessPoolExecutor() as executor:
@@ -67,16 +78,15 @@ class LCPV:
             print(f"We have a total of {len(self.output)}")
 
 
-    def _capture(self, resolution:tuple, framerate:int, frames:int):
+    def _capture(self, frames:int):
         """Creates the camera object and calls the self.buffers"""
-        self.resolution = resolution
-        with picamera.PiCamera(resolution=resolution, framerate=framerate) as camera:
+        with picamera.PiCamera(resolution=self.resolution, framerate=self.framerate) as camera:
             camera.capture_sequence(self._buffers(frames), "yuv", use_video_port=True)
         return True
 
     def _buffers(self, frames:int):
         """Yields buffers and adds them to que queue"""
-        for _ in range(frames):
+        for i in range(frames):
             stream = io.BytesIO()
             yield stream 
             stream.seek(0) # read the frame!
@@ -87,7 +97,8 @@ class LCPV:
             ).reshape(self.resolution[::-1])
             if self.correct_distortion:
                 image = self.corrector.correct_lens(image)
-            # TODO: correct perspective?
+            if self.write:
+                Image.fromarray(image).save(f"{self.path}/frame_{str(i).zfill(frames%10)}.png")
             self.queue.put(image)
 
 

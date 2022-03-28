@@ -11,7 +11,51 @@ import io
 import os
 
 class LCPV:
-    """"""
+    """Low Cost Particle Velocimetry
+    
+    This class works as an abstraction layer to the OpenPIV[1] particle
+    velocimetry package to be run inside a Raspberry Pi. This works as 
+    follows:
+
+    1. Create all the objects needed, those include:
+        - camera configuration (to be used with picamera[2])
+        - create the queue to store the data
+        - store the openpiv configuration
+    2. A `start` method to run all the experiment with the provided
+        configuration.
+
+    Params:
+    =======
+    resolution: tuple. Resolution of the camera.
+    framerate: int. Expected framerate (it may be lower due to 
+        raspberry power)
+    correct_distortion: bool. Whether to correct the barrel
+        distortion or not introduced by the lens. If True, 
+        `camera` parameter must be provided.
+    camera: dict. Lens correction parameters. Must include
+        the following parameters (detailed in `lens_correction.py`):
+        + mtx 
+        + dst
+        + rvecs 
+        + tvecs
+    write: bool. Whether to write results in disk or not. 
+
+    Examples:
+    =========
+    ```python
+    pv = LCPV(
+        resolution = (1920, 1080),
+        framerate = 24, # expected -> depends on raspebrry power
+        camera = # 
+    )
+
+    ```
+
+
+
+    [1]:
+    [2]:
+    """
     NUM_CORES = mp.cpu_count()
 
     def __init__(self, resolution:tuple=(1920, 1080),

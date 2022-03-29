@@ -1,21 +1,21 @@
-import numpy as np 
-import cv2 # sudo apt install python3-opencv
+import numpy as np
+import cv2  # sudo apt install python3-opencv
+
 
 class Corrector:
-
     HQ_CAMERA = {
-        "mtx": np.array([[5170.73738,         0., 2866.84263],
-                         [0.,         4307.52724, 1131.25773],
-                         [0.,                 0.,         1.]]),
-        "dst": np.array([[-0.85745244,  0.05168725,  0.10194636, -0.10056902, -0.04326248]]),
-        "rvecs": np.array([[-0.95357458],[-0.23090414],[-0.14895711]]),
-        "tvecs": np.array([[-3.69480464],[-0.12774038],[ 8.80394152]])
+        "mtx": np.array([[5170.73738, 0., 2866.84263],
+                         [0., 4307.52724, 1131.25773],
+                         [0., 0., 1.]]),
+        "dst": np.array([[-0.85745244, 0.05168725, 0.10194636, -0.10056902, -0.04326248]]),
+        "rvecs": np.array([[-0.95357458], [-0.23090414], [-0.14895711]]),
+        "tvecs": np.array([[-3.69480464], [-0.12774038], [8.80394152]])
     }
 
     def __init__(self):
         pass
 
-    def correct_lens(self, img:np.ndarray, camera:dict=None):
+    def correct_lens(self, img: np.ndarray, camera: dict = None):
         """
         Corrects the lens distortion of an image given the camera distortion 
         properties in `camera`. Those parameters, can be obtained via 
@@ -38,24 +38,23 @@ class Corrector:
 
         [1]: https://docs.opencv.org/3.4/dc/dbb/tutorial_py_calibration.html
         """
-        if not camera: # no correction to be done
+        if not camera:  # no correction to be done
             return
-        h,  w = img.shape[:2]
-        newmtx, roi = cv2.getOptimalNewCameraMatrix(camera["mtx"], 
-                                                    camera["dst"], 
-                                                    (w,h), 1, (w,h))
+        h, w = img.shape[:2]
+        newmtx, roi = cv2.getOptimalNewCameraMatrix(camera["mtx"],
+                                                    camera["dst"],
+                                                    (w, h), 1, (w, h))
 
         dst = cv2.undistort(img, camera["mtx"], camera["dst"], None, newmtx)
         # crop the image to select the correction
         x, y, w, h = roi
-        return dst[y:y+h, x:x+w]
+        return dst[y:y + h, x:x + w]
 
-    def correct_perspective(self, img, points:dict):
+    def correct_perspective(self, img, points: dict):
         """
         points = {"original_points": [], "target_points": []}
         """
         # TODO: decide how to implement it!
-
 
 
 if __name__ == "__main__":

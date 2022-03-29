@@ -6,9 +6,10 @@ from queue import Queue
 from PIL import Image
 import numpy as np
 import picamera
-import time
+import tqdm
 import io
 import os
+
 
 class LCPV:
     """Low Cost Particle Velocimetry
@@ -26,10 +27,12 @@ class LCPV:
 
     Params:
     =======
-    resolution: tuple. Resolution of the camera.
-    framerate: int. Expected framerate (it may be lower due to 
-        raspberry power)
-    correct_distortion: bool. Whether to correct the barrel
+    resolution: tuple.
+        Resolution of the camera.
+    framerate: int.
+        Expected framerate (it may be lower due to raspberry power)
+    correct_distortion: bool.
+        Whether to correct the barrel
         distortion or not introduced by the lens. If True, 
         `camera` parameter must be provided.
     camera: dict. Lens correction parameters. Must include
@@ -40,36 +43,35 @@ class LCPV:
         + tvecs
     write: bool. Whether to write results in disk or not. 
 
+
     Examples:
     =========
+
     ```python
     pv = LCPV(
         resolution = (1920, 1080),
-        framerate = 24, # expected -> depends on raspebrry power
-        camera = # 
+        framerate = 24, # expected
+        camera = Corrector.HQ_CAMERA,
+        correct_distortion = True,
+        write = False,
+        window_size = 32,
+        overlap = 16,
+        search_window_size = 32,
     )
-
+    pv.start(seconds = 10)
     ```
 
-
-
-    [1]:
-    [2]:
+    [1]: http://www.openpiv.net/
+    [2]: https://github.com/waveform80/picamera
     """
     NUM_CORES = mp.cpu_count()
 
-    def __init__(self, resolution:tuple=(1920, 1080),
-            framerate:int = 24, correct_distortion:bool=True,
-            camera:dict = None, 
-            write:bool=False, path:str="~/frames/",
-            *args, **kwargs):
-        """Builds the queue to output the data
-        
-        if `correct_distortion`, `camera` argument config must be provided, 
-        example:
-        camera = Corrector.HQ_CAMERA (one of the provided in corrector)
-        **kwargs => all the remaining openpiv args
-        """
+    def __init__(self, resolution: tuple = (1920, 1080),
+                 framerate: int = 24, correct_distortion: bool = True,
+                 camera: dict = None,
+                 write: bool = False, path: str = "~/frames/",
+                 *args, **kwargs):
+        """LCPV constructor"""
         self.queue = Queue()
         self.resolution = resolution
         self.framerate = framerate
@@ -79,70 +81,85 @@ class LCPV:
             self.camera = camera
         self.openpiv_args = kwargs
         self.write = write
-        
+
         if write:
             self.path = path
             # check if frames folder exists
             if not os.path.exists(path):
                 os.makedirs(path)
 
-        self.output = [] # where we will store the x, y, u, v
+        self.output = []  # where we will store the x, y, u, v
 
     def start(self,
-              seconds:int=1,
-              write:bool=False,
+              seconds: int = 1,
               *args, **kwargs):
-        """Runs the experiment
-        **kwargs => openpiv args"""
-        if self._capture():
-            print("Captured correctly")
+        """Runs the experiment for `seconds`, with the constructor
+        parameters as follows:
+        1. First capture all the images and store them in memory.
+            If lens distortion is corrected, it is corrected
+            before storing it, to decrease the RAM usage.
+        2. Do the OpenPIV processing and append the results
+            in `self.output`
+        """
+        print("Starting the capture process...")
+        if self._capture(seconds * self.framerate):
+            print(f"Total frames captured: {self.queue.qsize()}. Starting the processing.")
             futures = []
             with ProcessPoolExecutor() as executor:
-                while True:
-                    self.queue.mutex.acquire()
-                    if self.queue.qsize() >= 2:
-                        frame0 = self.queue.get()
-                        frame1 = self.queue.queue[0] # so we do not remove it
-                        print("We got 2 frames to process")
-                    else:
-                        print("Last iteration!")
-                        for future in futures:
-                            self.output.append(future.result())
-                        break # we will have ended
+                with tqdm.tqdm(total=self.queue.qsize()) as pbar:  # to view progress
+                    while True:
+                        # we will lock the queue to acquire the frames (otherwise nothing
+                        # guarantees the frame order).
+                        self.queue.mutex.acquire()
+                        if self.queue.qsize() >= 2:  # we have at least 2 frames to process remaining
+                            frame0 = self.queue.get()
+                            frame1 = self.queue.queue[0]  # so we do not remove
+                        else:
+                            # we will have ended, so we compute the results.
+                            for future in futures:
+                                self.output.append(future.result())
+                            break
 
-                    self.queue.mutex.release()
+                        self.queue.mutex.release()
 
-                    print("Submitting jobs!")
-                    # we can submit the job
-                    futures.append(
-                        executor.submit(compute,
-                                        [frame0, frame1], 
-                                        **self.openpiv_args)
-                    )
+                        # we can submit the job (we are in the if statement)
+                        futures.append(
+                            executor.submit(compute,
+                                            [frame0, frame1],
+                                            **self.openpiv_args)
+                        )
+                        pbar.update(1)
             print(f"We have a total of {len(self.output)}")
 
-
-    def _capture(self, frames:int):
-        """Creates the camera object and calls the self.buffers"""
+    def _capture(self, frames: int):
+        """Creates the camera object and captures the frames using the video port"""
         with picamera.PiCamera(resolution=self.resolution, framerate=self.framerate) as camera:
             camera.capture_sequence(self._buffers(frames), "yuv", use_video_port=True)
+            print("Capture process ended. Closing the camera.")
+        print("Camera closed.")
         return True
 
-    def _buffers(self, frames:int):
-        """Yields buffers and adds them to que queue"""
-        for i in range(frames):
+    def _buffers(self, frames: int):
+        """Yields buffers and adds them (once captured) to que queue"""
+        for i in tqdm.tqdm(range(frames)):
+            # create the stream buffer (to add the frame to)
             stream = io.BytesIO()
-            yield stream 
-            stream.seek(0) # read the frame!
+            yield stream  # return it to the camera to be used
+            stream.seek(0)  # read the frame!
+            # convert the buffer into a numpy array:
             image = np.frombuffer(
                 stream.getvalue(),
                 dtype=np.uint8,
                 count=np.prod(self.resolution)
             ).reshape(self.resolution[::-1])
+
+            # correct the images if requested
             if self.correct_distortion:
-                image = self.corrector.correct_lens(image)
+                image = self.corrector.correct_lens(image, camera=self.camera)
+            # and write them if so
             if self.write:
-                Image.fromarray(image).save(f"{self.path}/frame_{str(i).zfill(frames%10)}.png")
+                Image.fromarray(image).save(f"{self.path}/frame_{str(i).zfill(frames % 10)}.png")
+            # add them to the final queue
             self.queue.put(image)
 
 
@@ -152,7 +169,7 @@ if __name__ == "__main__":
         framerate=24,
         correct_distortion=True,
         camera=Corrector.HQ_CAMERA,
-        window_size=32, 
+        window_size=32,
         search_area_size=32,
         overlap=16
     )

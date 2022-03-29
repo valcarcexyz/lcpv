@@ -1,7 +1,14 @@
+# parallel computing:
 from concurrent.futures import ProcessPoolExecutor
+import multiprocessing as mp
+
+# custom scripts:
+from .unsharp_masking import opening_filter
 from .particle_velocimetry import compute
 from .lens_correction import Corrector
-import multiprocessing as mp
+
+# utils
+from typing import Callable
 from queue import Queue
 from PIL import Image
 import numpy as np
@@ -41,7 +48,9 @@ class LCPV:
         + dst
         + rvecs 
         + tvecs
-    write: bool. Whether to write results in disk or not. 
+    write: bool. Whether to write results in disk or not.
+    mask: function. How to mask the processed image (`None` won't
+        mask it).
 
 
     Examples:
@@ -57,6 +66,7 @@ class LCPV:
         window_size = 32,
         overlap = 16,
         search_window_size = 32,
+        mask = lambda x: opening_filter(x)
     )
     pv.start(seconds = 10)
     ```
@@ -70,6 +80,7 @@ class LCPV:
                  framerate: int = 24, correct_distortion: bool = True,
                  camera: dict = None,
                  write: bool = False, path: str = "~/frames/",
+                 mask: Callable = lambda x: opening_filter(x, kernel_size=7, threshold=220),
                  *args, **kwargs):
         """LCPV constructor"""
         self.queue = Queue()
@@ -87,6 +98,8 @@ class LCPV:
             # check if frames folder exists
             if not os.path.exists(path):
                 os.makedirs(path)
+
+        self.mask = mask
 
         self.output = []  # where we will store the x, y, u, v
 
@@ -156,7 +169,10 @@ class LCPV:
             # correct the images if requested
             if self.correct_distortion:
                 image = self.corrector.correct_lens(image, camera=self.camera)
-            # and write them if so
+            # mask it if provided function to do so
+            if self.mask:
+                image = self.mask(image)
+            # and write them if requested
             if self.write:
                 Image.fromarray(image).save(f"{self.path}/frame_{str(i).zfill(frames % 10)}.png")
             # add them to the final queue

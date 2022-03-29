@@ -2,8 +2,9 @@ from openpiv import piv
 import numpy as np
 import time
 
+
 def compute(frames: list,
-            output_structure: list=None,
+            output_structure: list = None,
             **kwargs):
     """
     Wrapper for the OpenPIV cross-correlation particle
@@ -40,9 +41,9 @@ def compute(frames: list,
         *frames, **kwargs
     )
     x, y = piv.pyprocess.get_coordinates(
-        image_size = frames[0].shape,
-        search_area_size = kwargs["search_area_size"],
-        overlap= kwargs["overlap"]
+        image_size=frames[0].shape,
+        search_area_size=kwargs["search_area_size"],
+        overlap=kwargs["overlap"]
     )
 
     valid = s2n > np.percentile(s2n, 5)
@@ -54,14 +55,12 @@ def compute(frames: list,
         return
     else:
         return (x, y, u, v)
-    
+
 
 if __name__ == "__main__":
     img = np.random.randint(0, 255, (512, 512), dtype=np.uint8)
 
     start = time.time()
-    compute([img]*2, overlap=16, search_area_size=32, window_size=32)
+    compute([img] * 2, overlap=16, search_area_size=32, window_size=32)
     end = time.time()
-    print(f"Took {end-start}s to process 2 frames")
-
-    
+    print(f"Took {end - start}s to process 2 frames")

@@ -7,6 +7,6 @@ setup(
     author="multiple",
     author_email="multiple",
     package_dir={"": "lcpv"},
-    packages=find_packages("lcpv"),
+    scripts=["lcpv/lcpv.py", "lcpv/lens_correction.py", "lcpv/unsharp_masking.py"],
     install_requires=[i.strip() for i in open("requirements.txt").readlines()],
 )

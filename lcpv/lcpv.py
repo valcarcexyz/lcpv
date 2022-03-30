@@ -180,6 +180,10 @@ class LCPV:
 
 
 if __name__ == "__main__":
+    import sys
+    args = sys.argv()
+    # TODO: read this attributes and use them!
+    print(args)
     l = LCPV(
         resolution=(1920, 1080),
         framerate=24,

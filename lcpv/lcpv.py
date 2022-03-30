@@ -119,29 +119,27 @@ class LCPV:
             print(f"Total frames captured: {self.queue.qsize()}. Starting the processing.")
             futures = []
             with ProcessPoolExecutor() as executor:
-                with tqdm.tqdm(total=self.queue.qsize()) as pbar:  # to view progress
-                    while True:
-                        # we will lock the queue to acquire the frames (otherwise nothing
-                        # guarantees the frame order).
-                        self.queue.mutex.acquire()
-                        if self.queue.qsize() >= 2:  # we have at least 2 frames to process remaining
-                            frame0 = self.queue.get()
-                            frame1 = self.queue.queue[0]  # so we do not remove
-                        else:
-                            # we will have ended, so we compute the results.
-                            for future in futures:
-                                self.output.append(future.result())
-                            break
-
+                while True:
+                    # we will lock the queue to acquire the frames (otherwise nothing
+                    # guarantees the frame order).
+                    self.queue.mutex.acquire()
+                    if len(self.queue.queue) >= 2:  # we have at least 2 frames to process remaining
+                        frame0 = self.queue.queue.popleft()
+                        frame1 = self.queue.queue[0]  # so we do not remove
                         self.queue.mutex.release()
-
                         # we can submit the job (we are in the if statement)
                         futures.append(
                             executor.submit(compute,
                                             [frame0, frame1],
                                             **self.openpiv_args)
                         )
-                        pbar.update(1)
+                    else:
+                        self.queue.mutex.release()
+                        # we will have ended, so we compute the results.
+                        for future in tqdm.tqdm(futures):
+                            self.output.append(future.result())
+                        break
+
             print(f"We have a total of {len(self.output)}")
 
     def _capture(self, frames: int):

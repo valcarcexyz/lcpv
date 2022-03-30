@@ -10,11 +10,12 @@ ENV resolution (1920, 1080)
 ENV framerate 24
 
 # install all the c-dependencies to run OpenCV
-RUN apt-get update && apt-get install -y python3-opencv
+RUN apt-get update && apt-get install -y \
+    python3-opencv \
+    libatlas-base-dev
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
+RUN pip install .
 
 # TODO: add the run command to execute the code
 

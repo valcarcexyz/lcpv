@@ -180,14 +180,14 @@ class LCPV:
 if __name__ == "__main__":
     import sys
     args = sys.argv()
-    # TODO: read this attributes and use them!
+    # TODO: add this feature to be run within docker
     print(args)
-    l = LCPV(
-        resolution=(1920, 1080),
-        framerate=24,
-        correct_distortion=True,
-        camera=Corrector.HQ_CAMERA,
-        window_size=32,
-        search_area_size=32,
-        overlap=16
-    )
+    # l = LCPV(
+    #     resolution=(1920, 1080),
+    #     framerate=24,
+    #     correct_distortion=True,
+    #     camera=Corrector.HQ_CAMERA,
+    #     window_size=32,
+    #     search_area_size=32,
+    #     overlap=16
+    # )

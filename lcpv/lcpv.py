@@ -184,19 +184,30 @@ class LCPV:
             # add them to the final queue
             self.queue.put(image)
 
-#
-# if __name__ == "__main__":
-#     import sys
-#
-#     args = sys.argv()
-#     # TODO: add this feature to be run within docker
-#     print(args)
-#     # l = LCPV(
-#     #     resolution=(1920, 1080),
-#     #     framerate=24,
-#     #     correct_distortion=True,
-#     #     camera=Corrector.HQ_CAMERA,
-#     #     window_size=32,
-#     #     search_area_size=32,
-#     #     overlap=16
-#     # )
+
+if __name__ == "__main__":
+    import argparse
+    import sys
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--resolution", nargs=2, type=int)
+    parser.add_argument("--framerate", type=int)
+    parser.add_argument("--correct_distortion", type=bool)
+    parser.add_argument("--camera", type=str)
+    parser.add_argument("--window_size", type=int)
+    parser.add_argument("--search_area_size", type=int)
+    parser.add_argument("--overlap", type=int)
+    parser.add_argument("--seconds", type=int)
+
+    args = dict(parser.parse_args()._get_kwargs())
+
+    if "seconds" not in args:
+        print("At least, you should indicate the --seconds flags")
+        sys.exit(0)
+
+    if "camera" in args:
+        args["camera"] = eval(args["camera"]) # (read the file)
+
+    l = LCPV(**args)
+    output = l.start(seconds=args["seconds"])
+    print(output)
+    # TODO: do something with this output

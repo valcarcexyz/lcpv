@@ -70,6 +70,15 @@ if output: # just in case it does not run properly and return None.
 
 # TODO: add the arguments
 
+Install docker:
+```bash
+curl -sSL https://get.docker.com | sh
+sudo usermod -aG docker ${USER}
+sudo systemctl --now enable docker
+```
+
+And the run the container:
+
 ```bash
 git clone git@github.com:valcarce01/lcpv.git
 docker build -t lcpv .

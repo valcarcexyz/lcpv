@@ -17,5 +17,8 @@ RUN apt-get update && apt-get install -y \
 COPY . .
 RUN pip install .
 
+
+ENTRYPOINT ["python", "./lcpv.py"]
+
 # TODO: add the run command to execute the code
 

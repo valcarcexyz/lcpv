@@ -4,7 +4,6 @@ import time
 
 
 def compute(frames: list,
-            output_structure: list = None,
             **kwargs):
     """
     Wrapper for the OpenPIV cross-correlation particle
@@ -48,13 +47,7 @@ def compute(frames: list,
 
     valid = s2n > np.percentile(s2n, 5)
     x, y, u, v = x[valid], y[valid], u[valid], -v[valid]
-
-    if output_structure:
-        # TODO: improve (depends on the output_structure)
-        output_structure.append((x, y, u, v))
-        return
-    else:
-        return (x, y, u, v)
+    return x, y, u, v
 
 
 if __name__ == "__main__":

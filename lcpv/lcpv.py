@@ -83,6 +83,7 @@ class LCPV:
                  mask: Callable = lambda x: opening_filter(x, kernel_size=7, threshold=220),
                  *args, **kwargs):
         """LCPV constructor"""
+        self.output_cleaned = None
         self.queue = Queue()
         self.resolution = resolution
         self.framerate = framerate
@@ -113,6 +114,7 @@ class LCPV:
             before storing it, to decrease the RAM usage.
         2. Do the OpenPIV processing and append the results
             in `self.output`
+        3. Compute the median for `u, v` velocimetry vectors (remove outliers).
         """
         print("Starting the capture process...")
         if self._capture(seconds * self.framerate):
@@ -140,7 +142,13 @@ class LCPV:
                             self.output.append(future.result())
                         break
 
-            print(f"We have a total of {len(self.output)}")
+            print(f"We have a total of {len(self.output)}. Computing median.")
+            # we now can compute the median of all the frames to
+            x, y = self.output[0][:2]  # first 2 items of the first response (x, y)
+            output = np.array(self.output)[:, 2:, ...]  # the last 2 (u, v)
+            u, v = np.nanmedian(output, axis=0)  # median without NaN
+            self.output_cleaned = (x, y, u, v)
+            return self.output_cleaned
 
     def _capture(self, frames: int):
         """Creates the camera object and captures the frames using the video port"""
@@ -179,6 +187,7 @@ class LCPV:
 
 if __name__ == "__main__":
     import sys
+
     args = sys.argv()
     # TODO: add this feature to be run within docker
     print(args)

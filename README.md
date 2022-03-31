@@ -24,12 +24,16 @@ steps, decreasing the processing power needed to compute the particle velocimetr
 
 3. Once captured, it starts the OpenPIV process, in parallel with as many cores as are available in the Raspberry.
 
+4. Finally, it computes the median of each velocimetry vector, as it is very sensitive to outliers. Returns the tuple
+   (x, y, u, v), being: (x, y) the points where velocimetry vector starts and (u, v) the velocimetry itself.
 
 ---
 # Installation
 
 We present two methods to run this package: (1) via python scripting and (2) with docker. _Installation expects to use
-raspbian._
+raspbian._ Before starting, we need to enable legacy mode of the Raspberry: run 
+`sudo raspi-config` and then select `Interface options > Legacy Camera > Enable`. Then reboot to make the changes
+effective.
 
 ## Python installation
 
@@ -40,10 +44,6 @@ sudo apt update && sudo apt upgrade
 sudo apt install python3-opencv libatlas-base-dev git
 ```
 
-To be able to use the camera module (CSI-2), we need to turn legacy mode on in the raspberry configuration: run 
-`sudo raspi-config` and then select `Interface options > Legacy Camera > Enable`. Then reboot to make the changes
-effective.
-
 Once installed the dependencies, we can install the package (will install also the package python dependencies):
 
 ```bash
@@ -53,6 +53,14 @@ pip install .
 ```
 
 ## Docker
+
+# TODO: add the arguments
+
+```bash
+git clone git@github.com:valcarce01/lcpv.git
+docker build -t lcpv .
+docker run -it -rm --name LCPV lcpv [KWARGS]
+```
 
 
 
@@ -71,32 +79,3 @@ Execution times in sequential (`piv.simple_piv`):
 1. performing the lens distortion correction
 2. wrapping the perspective
 3. masking the rain (we will reduce the number of pixels "activated")
-
-
-
-
-[+]: OpenPIV defualt settings
-
---- 
-Run it on raspbian/ubuntu based
-
-Dependencies
-```bash
-sudo apt update && sudo apt upgrade
-sudo apt install python3-opencv libatlas-base-dev
-```
-
-Set up camera-legacy mode. 
-1. `sudo raspi-config`
-2. Interface options
-3. legacy camera -> enable
-4. reboot
-
-
---- 
-
-# Docker
-```bash
-docker build -t lcpv .
-docker run -it --rm lcpv [KWARGS]
-```

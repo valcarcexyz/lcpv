@@ -19,7 +19,9 @@ captured, it can compute one (or more) of the following preprocessing tasks:
     
 Running this steps is highly encouraged as they reduce the image size, thus decreasing the RAM usage and in the next 
 steps, decreasing the processing power needed to compute the particle velocimetry in each of the frames.
+
 2. If desired, it can also write to disk the images.
+
 3. Once captured, it starts the OpenPIV process, in parallel with as many cores as are available in the Raspberry.
 
 

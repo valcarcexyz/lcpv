@@ -52,6 +52,20 @@ cd lcpv
 pip install .
 ```
 
+### Usage example
+
+```python
+import lcpv.lcpv as lcpv
+l = lcpv.LCPV(resolution=(1920, 1080), framerate=24,
+              correct_distortion=True, camera=lcpv.Corrector.HQ_CAMERA,
+              write=False,
+              mask=lambda x: lcpv.opening_filter(x, kernel_size=7, threshold=220),
+              window_size=32, overlap=16, search_area_size=32)
+output = l.start(seconds=10)
+if output: # just in case it does not run properly and return None.
+    x, y, u, v = output
+```
+
 ## Docker
 
 # TODO: add the arguments

@@ -184,19 +184,19 @@ class LCPV:
             # add them to the final queue
             self.queue.put(image)
 
-
-if __name__ == "__main__":
-    import sys
-
-    args = sys.argv()
-    # TODO: add this feature to be run within docker
-    print(args)
-    # l = LCPV(
-    #     resolution=(1920, 1080),
-    #     framerate=24,
-    #     correct_distortion=True,
-    #     camera=Corrector.HQ_CAMERA,
-    #     window_size=32,
-    #     search_area_size=32,
-    #     overlap=16
-    # )
+#
+# if __name__ == "__main__":
+#     import sys
+#
+#     args = sys.argv()
+#     # TODO: add this feature to be run within docker
+#     print(args)
+#     # l = LCPV(
+#     #     resolution=(1920, 1080),
+#     #     framerate=24,
+#     #     correct_distortion=True,
+#     #     camera=Corrector.HQ_CAMERA,
+#     #     window_size=32,
+#     #     search_area_size=32,
+#     #     overlap=16
+#     # )

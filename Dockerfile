@@ -4,11 +4,6 @@ LABEL version="0.1"
 LABEL description="A Low Cost Particle Velocimetry"
 LABEL mantainer="Multiple"
 
-# TODO: add all the variables and theck if they run
-# enviroment variables to run on
-ENV resolution (1920, 1080)
-ENV framerate 24
-
 # install all the c-dependencies to run OpenCV
 RUN apt-get update && apt-get install -y \
     python3-opencv \
@@ -17,8 +12,27 @@ RUN apt-get update && apt-get install -y \
 COPY . .
 RUN pip install .
 
-
-ENTRYPOINT ["python", "./lcpv.py"]
+ENTRYPOINT ["python", "-c", \
+    "import lcpv.lcpv as lcpv; \
+    import argparse; \
+    import sys; \
+    parser = argparse.ArgumentParser(); \
+    parser.add_argument(\"--resolution\", nargs=2, type=int); \
+    parser.add_argument(\"--framerate\", type=int); \
+    parser.add_argument(\"--correct_distortion\", type=bool); \
+    parser.add_argument(\"--camera\", type=str); \
+    parser.add_argument(\"--window_size\", type=int); \
+    parser.add_argument(\"--search_area_size\", type=int); \
+    parser.add_argument(\"--overlap\", type=int); \
+    parser.add_argument(\"--seconds\", type=int); \
+    args = dict(parser.parse_args()._get_kwargs()); \
+    if \"seconds\" not in args: \
+        print(\"At least, you should indicate the --seconds flags\"); \
+        sys.exit(0); \
+    if \"camera\" in args: \
+        args[\"camera\"] = eval(args[\"camera\"]); # (read the file) \
+    l = LCPV(**args); \
+    output = l.start(seconds=args[\"seconds\"]); "]
 
 # TODO: add the run command to execute the code
 

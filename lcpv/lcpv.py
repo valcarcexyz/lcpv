@@ -19,78 +19,92 @@ import os
 
 
 class LCPV:
-    """Low Cost Particle Velocimetry
-    
-    This class works as an abstraction layer to the OpenPIV[1] particle
-    velocimetry package to be run inside a Raspberry Pi. This works as 
-    follows:
 
-    1. Create all the objects needed, those include:
-        - camera configuration (to be used with picamera[2])
-        - create the queue to store the data
-        - store the openpiv configuration
-    2. A `start` method to run all the experiment with the provided
-        configuration.
-
-    Params:
-    =======
-    resolution: tuple.
-        Resolution of the camera.
-    framerate: int.
-        Expected framerate (it may be lower due to raspberry power)
-    correct_distortion: bool.
-        Whether to correct the barrel
-        distortion or not introduced by the lens. If True, 
-        `camera` parameter must be provided.
-    camera: dict. Lens correction parameters. Must include
-        the following parameters (detailed in `lens_correction.py`):
-        + mtx 
-        + dst
-        + rvecs 
-        + tvecs
-    write: bool. Whether to write results in disk or not.
-    mask: function. How to mask the processed image (`None` won't
-        mask it).
-
-
-    Examples:
-    =========
-
-    ```python
-    pv = LCPV(
-        resolution = (1920, 1080),
-        framerate = 24, # expected
-        camera = Corrector.HQ_CAMERA,
-        correct_distortion = True,
-        write = False,
-        window_size = 32,
-        overlap = 16,
-        search_window_size = 32,
-        mask = lambda x: opening_filter(x)
-    )
-    pv.start(seconds = 10)
-    ```
-
-    [1]: http://www.openpiv.net/
-    [2]: https://github.com/waveform80/picamera
-    """
     NUM_CORES = mp.cpu_count()
 
-    def __init__(self, resolution: tuple = (1920, 1080),
-                 framerate: int = 24, correct_distortion: bool = True,
-                 camera: dict = None,
+    def __init__(self, resolution: tuple = (1920, 1080), framerate: int = 24,
+                 correct_distortion: bool = True, camera: dict = None,
+                 correct_perspective: bool = False, points: list = None,
                  write: bool = False, path: str = "~/frames/",
                  mask: Callable = lambda x: opening_filter(x, kernel_size=7, threshold=220),
                  *args, **kwargs):
-        """LCPV constructor"""
+        """Low Cost Particle Velocimetry
+
+            This class works as an abstraction layer to the OpenPIV[1] particle
+            velocimetry package to be run inside a Raspberry Pi. This works as
+            follows:
+
+            1. Create all the objects needed, those include:
+                - camera configuration (to be used with picamera[2])
+                - create the queue to store the data
+                - store the openpiv configuration
+            2. A `start` method to run all the experiment with the provided
+                configuration.
+
+            Params:
+            =======
+            resolution: tuple.
+                Resolution of the camera.
+            framerate: int.
+                Expected framerate (it may be lower due to raspberry power)
+            correct_distortion: bool.
+                Whether to correct the barrel
+                distortion or not introduced by the lens. If True,
+                `camera` parameter must be provided.
+            camera: dict. Lens correction parameters. Must include
+                the following parameters (detailed in `lens_correction.py`):
+                + mtx
+                + dst
+                + rvecs
+                + tvecs
+            correct_perspective: bool.
+                Whether to correct the perspective or not.
+            points: list. Must be provided if `correct_perspective` is True.
+                Parameters to correct the perspective: a list with (1) the
+                points in the images and (2) the points it should be holding.
+                See `lens_correction.py` for
+                more information.
+            write: bool. Whether to write results in disk or not.
+            mask: function. How to mask the processed image (`None` won't
+                mask it).
+
+
+            Examples:
+            =========
+
+            ```python
+            pv = LCPV(
+                resolution = (1920, 1080),
+                framerate = 24, # expected
+                camera = Corrector.HQ_CAMERA,
+                correct_distortion = True,
+                write = False,
+                window_size = 32,
+                overlap = 16,
+                search_window_size = 32,
+                mask = lambda x: opening_filter(x)
+            )
+            pv.start(seconds = 10)
+            ```
+
+            [1]: http://www.openpiv.net/
+            [2]: https://github.com/waveform80/picamera
+            """
+
         self.output_cleaned = None
         self.queue = Queue()
+
         self.resolution = resolution
         self.framerate = framerate
+
+        self.corrector = Corrector()
         self.correct_distortion = correct_distortion
         if correct_distortion:
-            self.corrector = Corrector()
             self.camera = camera
+        self.correct_perspective = correct_perspective
+        if self.correct_perspective:
+            self.points = points
+
         self.openpiv_args = kwargs
         self.write = write
 
@@ -101,7 +115,6 @@ class LCPV:
                 os.makedirs(path)
 
         self.mask = mask
-
         self.output = []  # where we will store the x, y, u, v
 
     def start(self,
@@ -175,6 +188,11 @@ class LCPV:
             # correct the images if requested
             if self.correct_distortion:
                 image = self.corrector.correct_lens(image, camera=self.camera)
+
+            # correct perspective if requested
+            if self.correct_perspective:
+                image = self.corrector.correct_perspective(image, points=self.points)
+
             # mask it if provided function to do so
             if self.mask:
                 image = self.mask(image)
@@ -210,4 +228,3 @@ if __name__ == "__main__":
     l = LCPV(**args)
     output = l.start(seconds=args["seconds"])
     print(output)
-    # TODO: do something with this output

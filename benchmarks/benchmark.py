@@ -1,5 +1,6 @@
 # to measure performance:
 import pandas as pd
+# configuration to be able to print the complete dataframe:
 pd.set_option("display.max_rows", 10)
 pd.set_option("display.max_columns", 10)
 pd.set_option("display.width", 1_000)
@@ -36,7 +37,7 @@ def correct_image_perspective(img):
 # store all them in a list to be run in a loop
 TESTS = [opening_filter, median_filter, correct_lens_distortion, correct_image_perspective]
 # define how many runs to do to average times of execution
-RUNS = 1
+RUNS = 10
 
 
 def run():

@@ -17,13 +17,19 @@ class LCPV:
     def __init__(self):
         """Constructor"""
         self.queue = mp.Queue()
+        self.camera = Camera()
 
-    def start(self):
+    def start(self, resolution: tuple = (1920, 1080), framerate: int = 24, seconds: int = 1):
         """Run!"""
-
+        # TODO: run in a separated process
+        self.camera.start_recording(resolution=resolution,
+                                    framerate=framerate,
+                                    seconds=seconds,
+                                    process_output=self.queue_frames)
 
     def queue_frames(self, frame: np.ndarray):
         """Method to save the frames to the queue"""
+        # TODO: add the parameter from the json or by hand
         image_lens_corrected = correct_lens_distortion(frame)
         image_perspective_corrected = correct_perspective(image_lens_corrected)
         image_masked = opening_filter(image_perspective_corrected)
@@ -34,4 +40,3 @@ class LCPV:
 
 if __name__ == "__main__":
     l = LCPV()
-

@@ -9,13 +9,21 @@ from src.lcpv import filters
 # Running configuration:
 # The resolutions to be tested:
 RESOLUTIONS = [(540, 480), (720, 576), (1280, 720), (1920, 1080), (2048, 1536), (2592, 1920), (3840, 2160)]
-# non a convention, but the shortest way to be done
+# define each one of the benchmarks to be run
 def opening_filter(img): return filters.opening_filter(img, kernel_size=7, threshold=220)
 def median_filter(img): return filters.median_filter(img, kernel_size=7, threshold=220)
+
+
+# store all them in a list to be run in a loop
 TESTS = [opening_filter, median_filter]
+# define how many runs to do to average times of execution
 RUNS = 10
 
+
 def run():
+    """
+    Runs all the benchmarks and return a pandas dataframe containing the time measurement (in seconds).
+    """
     df = pd.DataFrame(index=RESOLUTIONS,
                       columns=[test.__name__ for test in TESTS])
 

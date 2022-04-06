@@ -21,11 +21,16 @@ class LCPV:
 
     def start(self, resolution: tuple = (1920, 1080), framerate: int = 24, seconds: int = 1):
         """Run!"""
+        # FIXME: may be better idea to run the process output in the consumer, more than in the producer,
+        # to ensure framerate.
         # TODO: run in a separated process
         self.camera.start_recording(resolution=resolution,
                                     framerate=framerate,
                                     seconds=seconds,
                                     process_output=self.queue_frames)
+
+    def consume(self, frames):
+        """Frames consumer"""
 
     def queue_frames(self, frame: np.ndarray):
         """Method to save the frames to the queue"""

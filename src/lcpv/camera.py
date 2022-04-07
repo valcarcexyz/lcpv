@@ -1,12 +1,16 @@
 import io
 from typing import Callable
 
+import multiprocessing as mp
 import numpy as np
 import picamera
 import tqdm
 
 
 class Camera:
+    def __init__(self):
+        self.running = mp.Value('i', 0)
+
     def start_recording(self,
                         resolution: tuple = (1920, 1080),
                         framerate: int = 24,
@@ -21,6 +25,7 @@ class Camera:
         seconds: int. How long to capture the images
         process_output: function. What to do with the captured frames (frames will be a numpy array)
         """
+        self.running.value = 1
         with picamera.PiCamera(resolution=resolution, framerate=framerate) as camera:
             camera.capture_sequence(
                     self._gen_buffers(frames=seconds * framerate,
@@ -31,6 +36,7 @@ class Camera:
             )
             print("Capture process ended. Closing the camera.")
         print("Camera closed.")
+        self.running.value = 0
         return True
 
     def _gen_buffers(self, frames: int, process_output: Callable, resolution: tuple):

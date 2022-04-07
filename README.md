@@ -84,3 +84,18 @@ git clone git@github.com:valcarce01/lcpv.git
 docker build -t lcpv .
 docker run -it -rm --name LCPV lcpv [KWARGS]
 ```
+
+
+# Benchmarks
+| Resolution   | opening_filter | median_filter | correct_lens_distortion | correct_image_perspective |
+|:-------------|---------------:|--------------:|------------------------:|--------------------------:|
+| (540, 480)   |           0.01 |          0.03 |                    0.01 |                     0.003 |
+| (720, 576)   |           0.01 |          0.05 |                    0.02 |                     0.007 |
+| (1280, 720)  |           0.04 |          0.13 |                    0.06 |                      0.01 |
+| (1920, 1080) |           0.09 |          0.29 |                    0.13 |                      0.02 |
+| (2048, 1536) |           0.13 |          0.46 |                    0.26 |                      0.04 |
+| (2592, 1920) |           0.22 |          0.72 |                   0.424 |                      0.07 |
+| (3840, 2160) |           0.36 |          1.35 |                    1.11 |                      0.11 |
+
+| Resolution | opening_filter | median_filter | correct_lens_distortion | correct_image_perspective |
+| (540, 480)

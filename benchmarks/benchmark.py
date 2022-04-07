@@ -1,3 +1,6 @@
+import sys
+sys.path.append("..")
+
 # to measure performance:
 import pandas as pd
 # configuration to be able to print the complete dataframe:

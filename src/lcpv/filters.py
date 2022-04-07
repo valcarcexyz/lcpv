@@ -30,6 +30,7 @@ def median_filter(img: np.ndarray,
                             median_image < threshold)
     return masked
 
+
 def opening_filter(img: np.ndarray,
                    kernel_size: int = 7,
                    threshold: int = 220) -> np.ndarray:

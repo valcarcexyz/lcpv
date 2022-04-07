@@ -45,6 +45,6 @@ class Camera:
                 stream.getvalue(),
                 dtype=np.uint8,
                 count=np.prod(self.resolution),
-            ).reshape(self.resolution[::-1])
+            ).reshape(resolution[::-1])
             process_output(image)
         return

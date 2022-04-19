@@ -4,7 +4,6 @@ from typing import Callable
 import multiprocessing as mp
 import numpy as np
 import picamera
-import tqdm
 
 
 class Camera:
@@ -41,7 +40,7 @@ class Camera:
 
     def _gen_buffers(self, frames: int, process_output: Callable, resolution: tuple):
         """Yields buffers"""
-        for _ in tqdm.tqdm(range(frames)):
+        for _ in range(frames):
             # create the stream buffer (to capture the frame to)
             stream = io.BytesIO()
             yield stream

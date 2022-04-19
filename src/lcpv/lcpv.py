@@ -33,32 +33,23 @@ class LCPV:
         qsize = 0
         futures = []
         with ProcessPoolExecutor(max_workers=self.NUM_CPU-1) as executor:
-            while self.camera.running.value or (qsize >= 2):
-                # we have data to consume!
-                # We first lock the queue, and then get the desired frames
-                self.queue.mutex.acquire()
-                frame0 = self.queue.queue.popleft()
-                frame1 = self.queue.queue[0]
-                self.queue.mutex.release()
-
+            while self.camera.running.value or (self.queue.qsize() >= 2):
+                # we have some data to consume!
+                frames = [self.queue.get() for _ in range(2)]
                 # we can create and call a new process to run on this frames
-                futures.append(executor.submit(self.consume, frame0, frame1))
-
-                # update the qsize:
-                qsize = self.queue.qsize()
+                futures.append(executor.submit(self.consume, *frames))
 
             # now we ensure the results are really processed
             for future in futures:
                 future.result()
 
+        # we need to consume the remaining elements of the queue (if there are any) in order
+        # to be able to close the `camera_capture_process`. This can't occur more than twice.
+        while not self.queue.empty():
+            self.queue.get()
+
         # wait till camera is closed
         camera_capture_process.join()
-
-        # # TODO: run in a separated process
-        # self.camera.start_recording(resolution=resolution,
-        #                             framerate=framerate,
-        #                             seconds=seconds,
-        #                             process_output=self.queue_frames)
 
     def consume(self, frame0, frame1):
         """Frames consumer"""
@@ -71,9 +62,7 @@ class LCPV:
 
     def queue_frames(self, frame: np.ndarray):
         """Method to save the frames to the queue"""
-        # self.queue.mutex.acquire()
-        self.queue.put(frame)  # FIXME: or put_nowait()? TRY IT
-        # self.queue.mutex.release()
+        self.queue.put(frame)
 
 
 if __name__ == "__main__":

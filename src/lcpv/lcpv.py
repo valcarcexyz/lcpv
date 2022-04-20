@@ -8,11 +8,13 @@ from filters import opening_filter, median_filter
 from camera import Camera
 
 # for the parallel processing
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 import multiprocessing as mp
+from threading import Thread
 
 # particle velocimetry stuff
 from openpiv.pyprocess import extended_search_area_piv, get_coordinates
+
 
 class LCPV:
     """
@@ -51,7 +53,7 @@ class LCPV:
             "Minimum args include window_size, search_area_size and overlap"
 
         # Definition of the camera process to capture the data (-data producers-)
-        camera_capture_process = mp.Process(
+        camera_capture_process = Thread(
             target=self.camera.start_recording,
             args=(resolution, framerate, seconds, self.queue_frames)
         )
@@ -63,17 +65,30 @@ class LCPV:
 
         # full multiprocessing object
         futures = []
-        with mp.Pool(self.NUM_CPU-1) as pool:
-            while self.camera.running.value or (self.queue.qsize() >= 2):
-                # we have some data to consume!
-                if self.queue.qsize() < 2:  # ensure we have some data to consume in pairs
-                    time.sleep(0.05)  # average time to get a new frame
-                frames = [self.queue.get() for _ in range(2)]
-                futures.append(pool.apply_async(self.consume, *frames, camera_params, **kwargs))
+        with ThreadPoolExecutor(self.NUM_CPU, initargs=(self.queue,)) as executor:
+            # process that will run the camera-things
+            camera_thread = executor.submit(self.camera.start_recording,
+                                            args=(resolution, framerate, seconds, self.queue_frames))
 
-            # now let's really consume the data
-            for future in futures:
-                future.get()
+            time.sleep(2)  # time to start the camera
+            # now the logic to run everything inside the pool
+            while self.queue.qsize() >= 2:
+                if len(futures) == 3:
+                    for _ in range(len(futures)):
+                        self.results.append(futures.pop().result())
+                else:
+                    frames = [self.queue.get() for _ in range(2)]
+                    futures.append(executor.submit(self.consume, (*frames, camera_params), kwargs))
+
+                # # we have some data to consume!
+                # if self.queue.qsize() < 2:  # ensure we have some data to consume in pairs
+                #     time.sleep(0.05)  # average time to get a new frame
+                # frames = [self.queue.get() for _ in range(2)]
+                # futures.append(pool.apply_async(self.consume, (*frames, camera_params), kwargs))
+
+            # # now let's really consume the data
+            # for future in futures:
+            #     future.get()
 
         # # Pool process of data consumers
         # futures = []
@@ -140,6 +155,7 @@ class LCPV:
 
 if __name__ == "__main__":
     import json
+
     with open("../camera_calibration/parameters.json") as f:
         camera_params = dict(json.load(f))
     camera_params = {k: np.array(v) for k, v in camera_params.items()}

@@ -15,12 +15,17 @@ import multiprocessing as mp
 from openpiv.pyprocess import extended_search_area_piv, get_coordinates
 
 class LCPV:
-    """"""
+    """
+    Class abstraction between users and both the Raspberry Camera interface and the OpenPIV library.
+    It provides an easy-to-use, parallel by default API, meant to be used within a Raspberry Pi (preferably the 4th
+    model).
+    """
     NUM_CPU = mp.cpu_count()
 
     def __init__(self):
         """Constructor"""
-        self.queue = mp.Queue()
+        manager = mp.Manager()
+        self.queue = manager.Queue()
         self.camera = Camera()
         self.results = []
 
@@ -53,20 +58,37 @@ class LCPV:
         # start the camera process
         camera_capture_process.start()
 
-        # Pool process of data consumers
+        # we need to provide some time to start the camera
+        time.sleep(2)  # more than enough
+
+        # full multiprocessing object
         futures = []
-        with ProcessPoolExecutor(max_workers=self.NUM_CPU-1) as executor:  # -1 as we need 1 core for the camera
+        with mp.Pool(self.NUM_CPU-1) as pool:
             while self.camera.running.value or (self.queue.qsize() >= 2):
                 # we have some data to consume!
                 if self.queue.qsize() < 2:  # ensure we have some data to consume in pairs
                     time.sleep(0.05)  # average time to get a new frame
                 frames = [self.queue.get() for _ in range(2)]
-                # we can create and call a new process to run on this frames
-                futures.append(executor.submit(self.consume, *frames, camera_params, **kwargs))
+                futures.append(pool.apply_async(self.consume, *frames, camera_params, **kwargs))
 
-            # now we ensure the results are really processed
+            # now let's really consume the data
             for future in futures:
-                self.results.append(future.result())
+                future.get()
+
+        # # Pool process of data consumers
+        # futures = []
+        # with ProcessPoolExecutor(max_workers=self.NUM_CPU-1) as executor:  # -1 as we need 1 core for the camera
+        #     while self.camera.running.value or (self.queue.qsize() >= 2):
+        #         # we have some data to consume!
+        #         if self.queue.qsize() < 2:  # ensure we have some data to consume in pairs
+        #             time.sleep(0.05)  # average time to get a new frame
+        #         frames = [self.queue.get() for _ in range(2)]
+        #         # we can create and call a new process to run on this frames
+        #         futures.append(executor.submit(self.consume, *frames, camera_params, **kwargs))
+        #
+        #     # now we ensure the results are really processed
+        #     for future in futures:
+        #         self.results.append(future.result())
 
         # we need to consume the remaining elements of the queue (if there are any) in order
         # to be able to close the `camera_capture_process`. This can't occur more than twice.
@@ -124,4 +146,3 @@ if __name__ == "__main__":
     l = LCPV()
     l.start(camera_params=camera_params, window_size=32, overlap=16, search_area_size=32)
     print(l.median_results)
-

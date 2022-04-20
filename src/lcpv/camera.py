@@ -49,7 +49,7 @@ class Camera:
             image = np.frombuffer(
                 stream.getvalue(),
                 dtype=np.uint8,
-                count=np.prod(self.resolution),
+                count=np.prod(resolution),
             ).reshape(resolution[::-1])
             process_output(image)
         return

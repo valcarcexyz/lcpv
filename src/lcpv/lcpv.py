@@ -65,45 +65,16 @@ class LCPV:
 
         # full multiprocessing object
         futures = []
-        with ThreadPoolExecutor(self.NUM_CPU, initargs=(self.queue,)) as executor:
-            # process that will run the camera-things
-            camera_thread = executor.submit(self.camera.start_recording,
-                                            args=(resolution, framerate, seconds, self.queue_frames))
+        with ThreadPoolExecutor(self.NUM_CPU-1) as executor:
+            while self.camera.running.value or (self.queue.qsize() >= 2):
+                if self.queue.qsize() < 2:  # ensure we have some data to consume in pairs
+                    time.sleep(0.05)  # average time to get a new frame
+                frames = [self.queue.get() for _ in range(2)]
+                futures.append(executor.submit(self.consume, *frames, camera_params, **kwargs))
 
-            time.sleep(2)  # time to start the camera
-            # now the logic to run everything inside the pool
-            while self.queue.qsize() >= 2:
-                if len(futures) == 3:
-                    for _ in range(len(futures)):
-                        self.results.append(futures.pop().result())
-                else:
-                    frames = [self.queue.get() for _ in range(2)]
-                    futures.append(executor.submit(self.consume, (*frames, camera_params), kwargs))
-
-                # # we have some data to consume!
-                # if self.queue.qsize() < 2:  # ensure we have some data to consume in pairs
-                #     time.sleep(0.05)  # average time to get a new frame
-                # frames = [self.queue.get() for _ in range(2)]
-                # futures.append(pool.apply_async(self.consume, (*frames, camera_params), kwargs))
-
-            # # now let's really consume the data
-            # for future in futures:
-            #     future.get()
-
-        # # Pool process of data consumers
-        # futures = []
-        # with ProcessPoolExecutor(max_workers=self.NUM_CPU-1) as executor:  # -1 as we need 1 core for the camera
-        #     while self.camera.running.value or (self.queue.qsize() >= 2):
-        #         # we have some data to consume!
-        #         if self.queue.qsize() < 2:  # ensure we have some data to consume in pairs
-        #             time.sleep(0.05)  # average time to get a new frame
-        #         frames = [self.queue.get() for _ in range(2)]
-        #         # we can create and call a new process to run on this frames
-        #         futures.append(executor.submit(self.consume, *frames, camera_params, **kwargs))
-        #
-        #     # now we ensure the results are really processed
-        #     for future in futures:
-        #         self.results.append(future.result())
+            # now let's really consume the data
+            for future in futures:
+                self.results.append(future.result())
 
         # we need to consume the remaining elements of the queue (if there are any) in order
         # to be able to close the `camera_capture_process`. This can't occur more than twice.

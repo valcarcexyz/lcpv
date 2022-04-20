@@ -12,6 +12,6 @@ def correct_lens_distortion(img:np.ndarray, cameraMatrix: np.ndarray, distCoeff:
 
 
 def correct_perspective(img:np.ndarray, originalPoints: np.ndarray, destinationPoints: np.ndarray):
-    """Corrects the perspective of the image"""
+    """Corrects the perspective of the image. Refer to the camera calibration for more details."""
     M = cv2.getPerspectiveTransform(originalPoints, destinationPoints)
     return cv2.warpPerspective(img, M, img.shape[:2][::-1])

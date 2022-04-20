@@ -34,34 +34,51 @@ class LCPV:
     def start(self,
               resolution: tuple = (1920, 1080), framerate: int = 24, seconds: int = 1,
               camera_params: dict = {}, **kwargs):
-        """Run!
+        """Runs the complete experiment, parallel ready. It's threaded-based due to the memory sharing
+        that it's needed. The code runs the following:
+
+        1. Run the camera capture thread, adding the frames to a thread-safe Queue
+        2. While the camera is running, process the results
 
         Params:
         =======
-        ...
-        camera_params: dict. Must include the following keys:
-            - cameraMatrix
-            - distCoeff
-            - originalPoints
-            - destinationPoints
-        **kwargs => openpiv args, minumum kwargs are:
-            - window_size
-            - search_area_size
-            - overlap
+        :param resolution: tuple[int]
+            The camera resolution
+        :param framerate: int
+            The framerate of the camera capture. If the frequency is too much, it just will take more seconds, i.e. if
+            50fps requested, but the camera only captures@24fps, it will capture for 2 seconds.
+        :param seconds: int
+            How long to capture the experiment.
+        :param camera_params: dict.
+            If lens correction desired, must include the following keys:
+                - cameraMatrix
+                - distCoeff
+            If perspective correction desired, must include:
+                - originalPoints
+                - destinationPoints
+            values of the dict *must* by np.ndarray objects. If none of the keys are provided, the preprocessing
+            will simply be ignored.
+        :param kwargs: OpenPIV args, minimum arguments required are:
+            - window_size: int
+            - search_area_size: int
+            - overlap: int
+            Refer to (OpenPIV documentation)[1] for further details.
+
+        [1]: http://www.openpiv.net/openpiv-python/
         """
         assert ("window_size" in kwargs) and ("search_area_size" in kwargs) and ("overlap" in kwargs), \
             "Minimum args include window_size, search_area_size and overlap"
 
-        # Definition of the camera process to capture the data (-data producers-)
-        camera_capture_process = Thread(
+        # Definition of the camera thread to capture the data (-data producer-)
+        camera_capture_thread = Thread(
             target=self.camera.start_recording,
             args=(resolution, framerate, seconds, self.queue_frames)
         )
-        # start the camera process
-        camera_capture_process.start()
+        # start the camera thread
+        camera_capture_thread.start()
 
-        # we need to provide some time to start the camera
-        time.sleep(2)  # more than enough
+        # we need to provide some time to warm up the camera
+        time.sleep(2)  # more than enough, it should be enough with 0.5 seconds.
 
         # full multiprocessing object
         futures = []
@@ -82,18 +99,42 @@ class LCPV:
             self.queue.get()
 
         # wait till camera is closed
-        camera_capture_process.join()
+        camera_capture_thread.join()
 
-    def consume(self, frame0, frame1, camera_params: dict, **kwargs):
-        """Frames consumer"""
-        # to correct lens distortion, we check if both cameraMatrix and distCoeff are present
+    @staticmethod
+    def consume(frame0, frame1, camera_params: dict, **kwargs):
+        """This is the frame consumer. Runs all the preprocessing (and the processing) to each one
+        of the frames captured. The current implementation runs the following:
+
+        1. Lens distortion correction (if `distCoeff` and `cameraMatrix` are provided inside the
+            `camera_params` matrix).
+        2. Perspective image correction (if `originalPoints` and `destinationPoints` are provided inside the
+            `camera_params` matrix).
+        3. Filter the results using an opening filter.
+        4. OpenPIV particle velocimetry computation, with the provided kwargs.
+
+        Params:
+        =======
+        frame0, frame1: np.ndarray
+            The 2-D images, np.uint8 type, to run the computation on.
+        camera_params: dict
+            This dictionary provides the data needed to run the lens corrections, which include both lens
+            correction and perspective correction. Based on the OpenCV library.
+        **kwargs
+            The remaining arguments which OpenPIV `extended_search_area_piv` runs with
+
+        Returns:
+        =======
+        A tuple of (x, y, u, -v). Where (x, y) is the position and (u, -v) the velocity measured.
+        """
+        # to correct lens distortion, we check if both cameraMatrix and distCoeff are proviedd
         if ("cameraMatrix" in camera_params.keys()) and ("distCoeff" in camera_params.keys()):
             # we can safely run the lens distortion correction
             frame0, frame1 = [correct_lens_distortion(img,
                                                       camera_params["cameraMatrix"], camera_params["distCoeff"]
                                                       ) for img in [frame0, frame1]]
+        # the same if we want to run the perspective correction
         if ("originalPoints" in camera_params.keys()) and ("destinationPoints" in camera_params.keys()):
-            # we can alse correct the perspective distortion
             frame0, frame1 = [correct_perspective(img,
                                                   camera_params["originalPoints"], camera_params["destinationPoints"]
                                                   ) for img in [frame0, frame1]]
@@ -118,10 +159,9 @@ class LCPV:
         """
         return x, y, median(u), median(v)
         """
-        # TODO: check if median is correct
         x, y = self.results[0][:2]
         results = np.array([(res[2], res[3]) for res in self.results])
-        return x, y, np.nanmedian(results, axis=0)  # axis = 0?
+        return x, y, np.nanmedian(results, axis=0)
 
 
 if __name__ == "__main__":

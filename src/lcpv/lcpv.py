@@ -81,16 +81,15 @@ class LCPV:
         camera_capture_thread.start()
 
         # we need to provide some time to warm up the camera
-        time.sleep(2)  # more than enough, it should be enough with 0.5 seconds.
+        time.sleep(1)  # more than enough, it should be enough with 0.5 seconds.
 
         # full multiprocessing object
         futures = []
         with ThreadPoolExecutor(self.NUM_CPU-1) as executor:
-            while self.camera.running.value or (self.queue.qsize() >= 2):
-                if self.queue.qsize() < 2:  # ensure we have some data to consume in pairs
-                    time.sleep(0.05)  # average time to get a new frame
+            while self.queue.qsize() >= 2:
                 frames = [self.queue.get() for _ in range(2)]
                 futures.append(executor.submit(self.consume, *frames, camera_params, **kwargs))
+                time.sleep(1)  # enough time to ensure camera captures 2 new frames.
 
             # now let's really consume the data
             for future in tqdm.tqdm(futures):

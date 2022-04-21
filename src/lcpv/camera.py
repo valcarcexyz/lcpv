@@ -7,9 +7,6 @@ import picamera
 
 
 class Camera:
-    def __init__(self):
-        self.running = mp.Value('i', 0)
-
     def start_recording(self,
                         resolution: tuple = (1920, 1080),
                         framerate: int = 24,
@@ -18,8 +15,7 @@ class Camera:
                         ):
         """
         Abstraction layer of the picamera interface. Captures frames using the video port (same resolution, better
-        framerate). For parallel usage, it provides a `running` thread-safe variable, so different threads can check
-        whether it is running or it has already stopped.
+        framerate).
 
         Params:
         ======
@@ -28,7 +24,6 @@ class Camera:
         :param seconds: int. How long to capture the images
         :param process_output: function. What to do with the captured frames (frames will be a numpy array)
         """
-        self.running.value = 1  # set 'boolean' to running
         with picamera.PiCamera(resolution=resolution, framerate=framerate) as camera:
             camera.capture_sequence(
                 self._gen_buffers(frames=seconds * framerate,  # number of frames to capture with the video port
@@ -39,7 +34,6 @@ class Camera:
             )
             print("Capture process ended. Closing the camera.")
         print("Camera closed.")
-        self.running.value = 0  # no longer running
         return True
 
     @staticmethod

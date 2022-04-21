@@ -10,6 +10,6 @@ COPY . .
 # update and install the requirements
 RUN apt-get update
 RUN apt-get install -y python3-opencv libatlas-base-dev
-RUN pip install .1
+RUN pip install .
 
 ENTRYPOINT ["python", "examples/run_from_termina.py"]

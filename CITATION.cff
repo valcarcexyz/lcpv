@@ -1,7 +1,7 @@
 cff-version: 1.2.0
-title: YET TO DECIDE
-message: None
-type: article
+title: "LCPV: a Low Cost (Raspberry-based) Particle Velocimetry"
+message: "If you use lcpv in your research, please cite it using these metadata."
+type: software
 authors:
   - given-names: Diego
     family-names: Valcarce Rios

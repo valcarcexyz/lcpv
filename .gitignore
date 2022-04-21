@@ -6,5 +6,4 @@ venv/
 
 # pycache
 __pycache__/
-lcpv/__pycache__/
 /.pytest_cache/

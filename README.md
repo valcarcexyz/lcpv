@@ -55,7 +55,14 @@ Further examples can be found in the `examples` folder.
 
 ## Run it with docker
 
-First, ensure you have docker properly installed, and then build it.
+First, install docker and add the pi user to the docker group (reboot may be needed):
+```bash
+curl -sSL https://get.docker.com | sh
+sudo usermod -aG docker ${USER}
+sudo systemctl --now enable docker
+```
+
+And run it!
 ```bash
 docker build --tag lcpv .
 docker run -it -rm --name LCPV lcpv \

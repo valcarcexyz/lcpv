@@ -1,14 +1,18 @@
 """
-This script provides a simple example execution from the terminal args
+This script provides a simple example execution from the terminal args. Can be run when the package is installed
+with pip or importing it from the src folder.
 """
 
 import numpy as np
 import json
 import sys
 
-sys.path.append("..")
-
-from src.lcpv.lcpv import LCPV
+# run once installed with pip
+try:
+    from lcpv.lcpv import LCPV
+except ModuleNotFoundError:  # just for compatibility
+    sys.path.append("..")
+    from src.lcpv.lcpv import LCPV
 
 if __name__ == "__main__":
     # create the possible configs

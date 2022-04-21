@@ -89,7 +89,9 @@ class LCPV:
             while self.queue.qsize() >= 2:
                 frames = [self.queue.get() for _ in range(2)]
                 futures.append(executor.submit(self.consume, *frames, camera_params, **kwargs))
-                time.sleep(1)  # enough time to ensure camera captures 2 new frames.
+                # enough time to ensure camera captures 2 new frames (does not slow down the processing time
+                # as there are already jobs submitted and the computation time is well above 1 second).
+                time.sleep(1)
 
             # now let's really consume the data
             for future in tqdm.tqdm(futures):

@@ -2,6 +2,8 @@ import numpy as np
 import json
 import sys
 
+sys.path.append("../")
+
 from src.lcpv.lcpv import LCPV
 
 def main():

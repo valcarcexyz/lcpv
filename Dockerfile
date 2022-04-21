@@ -5,7 +5,7 @@ LABEL description="A Low Cost (Raspberry-based) Particle Velocimetry"
 LABEL mantainer="Diego Valcarce Ríos"
 
 # copy the package and examples to the container
-COPY src /package
+COPY src /src
 COPY examples /examples
 
 # update and install the requirements

@@ -2,10 +2,10 @@ import numpy as np
 import time
 
 # our functions to preprocess data
-from lens_corrector import correct_lens_distortion, correct_perspective
-from filters import opening_filter, median_filter
+from .lens_corrector import correct_lens_distortion, correct_perspective
+from .filters import opening_filter, median_filter
 # and the camera abstraction layer
-from camera import Camera
+from .camera import Camera
 
 # for the parallel processing
 from concurrent.futures import ThreadPoolExecutor
@@ -14,6 +14,9 @@ from threading import Thread
 
 # particle velocimetry stuff
 from openpiv.pyprocess import extended_search_area_piv, get_coordinates
+
+# progress bar
+import tqdm
 
 
 class LCPV:
@@ -90,7 +93,7 @@ class LCPV:
                 futures.append(executor.submit(self.consume, *frames, camera_params, **kwargs))
 
             # now let's really consume the data
-            for future in futures:
+            for future in tqdm.tqdm(futures):
                 self.results.append(future.result())
 
         # we need to consume the remaining elements of the queue (if there are any) in order

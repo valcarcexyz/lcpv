@@ -1,8 +1,9 @@
 numpy==1.22.3
-opencv-python==4.5.5.64
 openpiv==0.23.8
 tqdm==4.63.0
 setuptools==60.10.0
-Pillow==9.0.1
-matplotlib==3.5.1
-picamera==1.13
+# picamera==1.13
+pandas~=1.4.2
+opencv-python~=4.5.5.64
+matplotlib~=3.5.1
+lcpv~=0.1

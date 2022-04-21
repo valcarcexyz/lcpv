@@ -63,10 +63,3 @@ def opening_filter(img: np.ndarray,
     masked = np.logical_and(img > threshold,
                             opening < threshold)
     return masked
-
-
-if __name__ == "__main__":
-    # for testing purposes
-    img_try = np.random.randint(low=0, high=255, size=(512, 512), dtype=np.uint8)
-    median  = median_filter(img_try, kernel_size=5, threshold=100)
-    opening = opening_filter(img_try, kernel_size=5, threshold=100)

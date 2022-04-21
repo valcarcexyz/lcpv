@@ -1,12 +1,19 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='lcpv',
     version='0.1',
-    packages=['lcpv'],
+    package_dir={"": "src"},
+    packages=find_packages(where="src"),
     url='https://github.com/valcarce01/lcpv',
-    license='Not yet decided',
-    author='multiple',
-    author_email='multiple',
-    description='A Low Cost (Raspberry-based) particle velocimetry'
+    license='',
+    author='Diego Valcarce Ríos,\
+            Juan Ramón Rabuñal Dopico,\
+            Juan Naves García-Rendueles,\
+            José Anta Álvarez,\
+            Sonia Seijo Conchado',
+    author_email='d.valcarce@udc.es',
+    description='Low cost (Rasperry-based) particle velociemtry',
+    install_requires=[line.strip() for line in open("requirements.txt").readlines()],
+    # todo: add the tests
 )

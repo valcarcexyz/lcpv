@@ -55,14 +55,7 @@ Further examples can be found in the `examples` folder.
 
 ## Run it with docker
 
-First, ensure you have docker installed:
-```bash
-curl -sSL https://get.docker.com | sh
-sudo usermod -aG docker ${USER}
-sudo systemctl --now enable docker
-```
-
-And now start the container
+First, ensure you have docker properly installed, and then build it.
 ```bash
 docker build --tag lcpv .
 docker run -it -rm --name LCPV lcpv \

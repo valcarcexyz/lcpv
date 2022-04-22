@@ -1,28 +1,29 @@
 import sys
+import unittest
+
 sys.path.append("..")
-from lcpv.lens_correction import Corrector
+
+from src.lcpv.lens_corrector import correct_lens_distortion, correct_perspective
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
-import time
-
-def run(original_image:np.ndarray):
-    """
-    Shows the correction of an image to test whether it is working or not.
-    """
-    corrector = Corrector()
-    corrected_image = corrector.correct_lens(original_image, corrector.HQ_CAMERA)
-    
-    fig, axs = plt.subplots(2, 1)
-    axs[0].imshow(original_image, cmap = "gray")
-    axs[0].axis("off")
-    axs[0].set_title("Original image")
-    axs[1].imshow(corrected_image, cmap = "gray")
-    axs[1].axis("off")
-    axs[1].set_title("Corrected image")
-    plt.show()
+import json
 
 
-if __name__ == "__main__":
-    img = cv2.imread("../data/original_image.bmp", 0)
-    run(img)
+class TestCorrector(unittest.TestCase):
+    """Test cases to check the lens correction (both introduced by the lens itself and
+    the introduced by the perspective"""
+
+    original_image = cv2.imread("../data/original_image.bmp", 0)
+    corrected_image = cv2.imread("../data/corrected_image.png", 0)
+    # camera params
+    with open("../src/camera_calibration/parameters.json", "r") as f:
+        params_camera_hq = json.load(f)["HQ_CAMERA"]
+    params_camera_hq = {k: np.array(v) for k, v in params_camera_hq.items()}
+
+    def test_lens_distortion(self):
+        """Test if the lens distortion corrector works properly, with a tolerance of 1 pixel"""
+        lens_corrected = correct_lens_distortion(self.original_image,
+                                                 self.params_camera_hq["cameraMatrix"],
+                                                 self.params_camera_hq["distCoeff"])
+        self.assertEqual(True, np.isclose(lens_corrected, self.corrected_image, rtol=1).all())

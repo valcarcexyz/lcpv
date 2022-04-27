@@ -9,11 +9,7 @@ import json
 import sys
 
 # run once installed with pip
-try:
-    from lcpv.lcpv import LCPV
-except ModuleNotFoundError:  # just for compatibility
-    sys.path.append("..")
-    from src.lcpv.lcpv import LCPV
+from lcpv.lcpv import LCPV
 
 
 def main():

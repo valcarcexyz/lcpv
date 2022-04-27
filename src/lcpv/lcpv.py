@@ -5,7 +5,11 @@ import time
 from .lens_corrector import correct_lens_distortion, correct_perspective
 from .filters import opening_filter, median_filter
 # and the camera abstraction layer
-from .camera import Camera
+try:
+    from .camera import Camera
+except ModuleNotFoundError:
+    import warnings
+    warnings.warn("Could not import PiCamera, proceed only if it is not intended to be used")
 
 # for the parallel processing
 from concurrent.futures import ThreadPoolExecutor
@@ -31,7 +35,7 @@ class LCPV:
         """Constructor"""
         manager = mp.Manager()
         self.queue = manager.Queue()
-        self.camera = Camera()
+        # self.camera = Camera()
         self.results = []
 
     def start(self,
@@ -71,10 +75,10 @@ class LCPV:
         """
         assert ("window_size" in kwargs) and ("search_area_size" in kwargs) and ("overlap" in kwargs), \
             "Minimum args include window_size, search_area_size and overlap"
-
+        camera = Camera()
         # Definition of the camera thread to capture the data (-data producer-)
         camera_capture_thread = Thread(
-            target=self.camera.start_recording,
+            target=camera.start_recording,
             args=(resolution, framerate, seconds, self.queue_frames)
         )
         # start the camera thread
@@ -104,6 +108,10 @@ class LCPV:
 
         # wait till camera is closed
         camera_capture_thread.join()
+
+    def process_video(self, video_path: str, camera_params: dict = {}, **kwargs):
+        """If instead of running in the camera, it is intended to be used to process a video"""
+        pass
 
     @staticmethod
     def consume(frame0, frame1, camera_params: dict, **kwargs):
@@ -169,11 +177,12 @@ class LCPV:
 
 
 if __name__ == "__main__":
-    import json
-
-    with open("../camera_calibration/parameters.json") as f:
-        camera_params = dict(json.load(f))
-    camera_params = {k: np.array(v) for k, v in camera_params.items()}
     l = LCPV()
-    l.start(camera_params=camera_params, window_size=32, overlap=16, search_area_size=32)
-    print(l.median_results)
+    # import json
+    #
+    # with open("../camera_calibration/parameters.json") as f:
+    #     camera_params = dict(json.load(f))
+    # camera_params = {k: np.array(v) for k, v in camera_params.items()}
+    # l = LCPV()
+    # l.start(camera_params=camera_params, window_size=32, overlap=16, search_area_size=32)
+    # print(l.median_results)

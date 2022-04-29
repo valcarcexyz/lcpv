@@ -7,3 +7,5 @@ venv/
 # pycache
 __pycache__/
 /.pytest_cache/
+
+data/video.h264

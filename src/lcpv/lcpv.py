@@ -5,11 +5,7 @@ import time
 from .lens_corrector import correct_lens_distortion, correct_perspective
 from .filters import opening_filter, median_filter
 # and the camera abstraction layer
-try:
-    from .camera import Camera
-except ModuleNotFoundError:
-    import warnings
-    warnings.warn("Could not import PiCamera, proceed only if it is not intended to be used")
+from .camera import Camera
 
 # for the parallel processing
 from concurrent.futures import ThreadPoolExecutor
@@ -35,7 +31,7 @@ class LCPV:
         """Constructor"""
         manager = mp.Manager()
         self.queue = manager.Queue()
-        # self.camera = Camera()
+        self.camera = Camera()
         self.results = []
 
     def start(self,
@@ -75,10 +71,9 @@ class LCPV:
         """
         assert ("window_size" in kwargs) and ("search_area_size" in kwargs) and ("overlap" in kwargs), \
             "Minimum args include window_size, search_area_size and overlap"
-        camera = Camera()
         # Definition of the camera thread to capture the data (-data producer-)
         camera_capture_thread = Thread(
-            target=camera.start_recording,
+            target=self.camera.start_recording,
             args=(resolution, framerate, seconds, self.queue_frames)
         )
         # start the camera thread

@@ -1,8 +1,7 @@
 """
 
 """
-from processing import lens_correction
-from processing import filters
+from utils.lcpv_template import LowCostParticleVelocimeter
 from capture import camera
 
 # other
@@ -10,8 +9,9 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 import multiprocessing as mp
 import time
+import tqdm
 
-class LCPV:
+class LCPV(LowCostParticleVelocimeter):
     """
     Class that contains all the processing to run as edge computing in the raspberry pi.
     """
@@ -21,8 +21,8 @@ class LCPV:
         """LCPV constructor, meant to create the common variables: the queue where Raspberry
         will write the captured frames and the results list that will store the processing
         results"""
+        super().__init__()
         self.queue = mp.Queue()
-        self.results = []
 
     def start(self,
               resolution: tuple[int] = (1920, 1080),
@@ -32,7 +32,7 @@ class LCPV:
               *args, **kwargs):
         """
         Runs the complete experiment, meant to be run within the raspberry and to make use of its camera. To run
-        after capturing process has ended, see `lcpv.py` # TODO: change filename
+        after capturing process has ended, see `src.py` # TODO: change filename
 
         This implementation is a batteries installed, full parallel (threads, due to the sharing complexity between
         processes). The 'logic' is the following:
@@ -74,44 +74,36 @@ class LCPV:
         """
         assert ("window_size" in kwargs) and ("search_area_size" in kwargs) and ("overlap" in kwargs), \
             "Minimum args include window_size, search_area_size and overlap"
-        # Definition of the camera thread to capture the data (-data producer-)
+
+        # 1. Define the camera capture process and start it
         camera_capture_thread = Thread(
-            target=self.camera.start_recording,
-            args=(resolution, framerate, seconds, self.queue_frames)
+            target=camera.start_recording,
+            args=(resolution, framerate, seconds, lambda frame: self.queue.put(frame))
         )
-        # start the camera thread
         camera_capture_thread.start()
 
-        # we need to provide some time to warm up the camera
-        time.sleep(1)  # more than enough, it should be enough with 0.5 seconds.
+        # 2. Wait a second so the cameras has already captured some frames (easier logic)
+        time.sleep(1)  # it should be enough with 0.5 seconds
 
-        # full multiprocessing object
+        # 3. Start the thread pool to process each pair of the frames
         futures = []
-        with ThreadPoolExecutor(self.NUM_CPU - 1) as executor:
-            while self.queue.qsize() >= 2:
+        with ThreadPoolExecutor(self.NUM_CPU - 1) as executor:  # (n-1) because the nth is capturing frames
+            while self.queue.qsize() >= 2:  # while we have 2 frames to process (we process in pairs)
                 frames = [self.queue.get() for _ in range(2)]
-                futures.append(executor.submit(self.consume, *frames, camera_params, **kwargs))
-                # enough time to ensure camera captures 2 new frames (does not slow down the processing time
-                # as there are already jobs submitted and the computation time is well above 1 second).
+                # submit the job
+                futures.append(executor.submit(self.process_frames, *frames, camera_params, *args, **kwargs))
+                # we create a small delay so camera has enough time to capture more frames (easier logic) while
+                # keeping (approximately) the performance, it only is really slower in the first two frames.
                 time.sleep(1)
 
-            # now let's really consume the data
+            # now let's ensure data is processed
             for future in tqdm.tqdm(futures):
                 self.results.append(future.result())
 
         # we need to consume the remaining elements of the queue (if there are any) in order
-        # to be able to close the `camera_capture_process`. This can't occur more than twice.
+        # to be able to close the `camera_capture_process`.
         while not self.queue.empty():
             self.queue.get()
 
         # wait till camera is closed
         camera_capture_thread.join()
-
-
-
-
-
-
-
-
-

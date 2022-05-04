@@ -31,7 +31,7 @@ def start_recording(resolution: tuple = (1920, 1080),
                     framerate: int = 24,
                     seconds: int = 1,
                     process_output: Callable = lambda _: None,
-                    ) -> bool:
+                    ):
     """
     Function that interacts with the raspberry pi camera, using the picamera library [1]. It uses the video port
     to take images, because it keeps the native resolution of the sensor, but with the framerate of a video. It also
@@ -42,8 +42,7 @@ def start_recording(resolution: tuple = (1920, 1080),
     :param framerate: int.
     :param seconds: int.
     :param process_output: Callable.
-    :return: True if everything works fine.
-    :rtype: bool.
+    :return: None
 
     [1]: https://github.com/waveform80/picamera
     """
@@ -56,5 +55,3 @@ def start_recording(resolution: tuple = (1920, 1080),
             "yuv",  # fastest method tested
             use_video_port=True
         )
-
-    return True

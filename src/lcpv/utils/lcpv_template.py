@@ -1,6 +1,6 @@
 from openpiv.pyprocess import extended_search_area_piv, get_coordinates
-from lcpv.processing import lens_correction
-from lcpv.processing import filters
+from src.lcpv.processing import filters
+from src.lcpv.processing import lens_correction
 import numpy as np
 
 from functools import wraps
@@ -37,7 +37,7 @@ class LowCostParticleVelocimeter:
 
     def process_frames(self,
                        frame0: np.ndarray, frame1: np.ndarray,
-                       camera_params: dict = None, *args, **kwargs) -> None:
+                       camera_params: dict = {}, *args, **kwargs) -> None:
         """
         Consumer method (static) that process the frames of a video in pairs. The optional `args` and `kwargs` are
         by no means optional, they must include all the needed arguments to run the `openpiv.pyprocess_extended`
@@ -80,7 +80,7 @@ class LowCostParticleVelocimeter:
                                overlap=kwargs["overlap"])
         valid = s2n < np.percentile(s2n, 5)
 
-        if len(self.results["x"]) == 0:  # (so we do not add the same multiple times, as `x` and `y` are constant).
+        if len(self.results["x"]) == 0:  # so we do not add the same multiple times (as `x` and `y` are constant).
             self.results["x"].append(x[valid])
             self.results["y"].append(y[valid])
 
@@ -94,8 +94,5 @@ class LowCostParticleVelocimeter:
         return x, y, median(u), median(v)
         """
         x, y, u, v = self.results["x"], self.results["y"], self.results["u"], self.results["v"]
-        # TODO: CHECK IF THIS IS AS IT IS WRITTEN OR IF SHOULD BE A CONCATENATED ARRAY
+        # TODO: CHECK IF THIS IS AS IT IS WRITTEN OR IF SHOULD BE A CONCATENATED ARRAY (PREVIOUS IMPLEMENTATION)
         return x, y, np.nanmedian(u, axis=0), np.nanmedian(v, axis=0)
-
-
-

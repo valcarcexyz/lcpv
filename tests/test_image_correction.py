@@ -1,7 +1,7 @@
 import sys
 sys.path.append("..")
 
-from src.lcpv.lens_corrector import correct_lens_distortion, correct_perspective
+from src_old.lcpv.lens_corrector import correct_lens_distortion, correct_perspective
 import numpy as np
 import unittest
 import cv2
@@ -15,7 +15,7 @@ class TestCorrector(unittest.TestCase):
     original_image = np.float32(cv2.imread("../data/original_image.bmp", 0))
     corrected_image = np.float32(cv2.imread("../data/corrected_image.png", 0))
     # camera params
-    with open("../src/camera_calibration/parameters.json", "r") as f:
+    with open("../src/lcpv/calibration/parameters.json", "r") as f:
         params_camera_hq = json.load(f)["HQ_CAMERA"]
     params_camera_hq = {k: np.array(v) for k, v in params_camera_hq.items()}
 

@@ -7,7 +7,7 @@ def parse(args: list) -> dict:
     + --resolution: tuple indicating the resolution of the image to be captured (i.e. `(1920,1080)`)
     + --framerate: int with the expected framerate
     + --seconds: int of how long to store frames
-    + --camera_params: str, a path to a json file with the camera configuration (see `src/camera_calibration`)
+    + --camera_params: str, a path to a json file with the camera configuration (see `src_old/camera_calibration`)
     + --window_size: int, OpenPIV param
     + --overlap: int, OpenPIV param
     + --search_area_size: int, OpenPIV param

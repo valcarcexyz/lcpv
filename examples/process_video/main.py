@@ -12,8 +12,8 @@ sys.path.append("../")
 from utils.args_parser import parse
 
 sys.path.append("../../")
-from src.lcpv.lens_corrector import correct_lens_distortion, correct_perspective
-from src.lcpv.filters import opening_filter
+from src_old.lcpv.lens_corrector import correct_lens_distortion, correct_perspective
+from src_old.lcpv.filters import opening_filter
 
 from openpiv.pyprocess import extended_search_area_piv, get_coordinates
 

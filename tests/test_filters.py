@@ -1,7 +1,7 @@
 import sys
 sys.path.append("..")
 
-from src.lcpv.filters import opening_filter, median_filter
+from src_old.lcpv.filters import opening_filter, median_filter
 import numpy as np
 import unittest
 

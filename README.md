@@ -39,14 +39,16 @@ sudo apt install python3-opencv libatlas-base-dev git
 ```
 Once installed the dependencies, we can install the package (will install also the package python dependencies):
 ```bash
-git clone git@github.com:valcarce01/lcpv.git
-cd lcpv
+git clone git@github.com:valcarce01/src.git
+cd src
 pip install .
 ```
 
 A basic test execution can be:
+
 ```python
-from lcpv.lcpv import LCPV
+from src.lcpv.edge_process import LCPV
+
 l = LCPV()
 l.start(window_size=32, search_area_size=32, overlap=16)
 ```
@@ -64,11 +66,16 @@ sudo systemctl --now enable docker
 
 And run it!
 ```bash
-docker build --tag lcpv .
-docker run -it -rm --name LCPV lcpv \
+docker build --tag src .
+docker run -it -rm --name LCPV src \
   --resolution (1920,1080) --framerate 24 --seconds 1 \
-  --camera_params src/camera_calibration_/parameters.json \
+  --camera_params src_old/camera_calibration_/parameters.json \
   --window_size 32 --search_area_size 32 --overlap 16
+```
+
+```bash
+pip install src[camera_support]
+pip install -e git+https://github.com/user/project.git#egg=project[camera_support]
 ```
 
 # Benchmarks

@@ -14,11 +14,11 @@ import time
 import json
 
 # import all the functions that must be measured
-from src.lcpv import filters
-from src.lcpv import lens_corrector
+from src_old.lcpv import filters
+from src_old.lcpv import lens_corrector
 
 # parameters
-with open("../src/camera_calibration/parameters.json") as f:
+with open("../src/lcpv/calibration/parameters.json") as f:
     HQ_CAMERA_PARAMS = json.load(f)["HQ_CAMERA"]
 
 # Running configuration:

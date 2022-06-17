@@ -1,24 +1,19 @@
 """
-Example of how to run in the HQ camera with the parameters of src/camera_calibration/parameters.json
+Example of how to run in the HQ camera with the parameters of src_old/camera_calibration/parameters.json
 
-Meant to be used once installed with pip, but can run it from the src folder.
+Meant to be used once installed with pip, but can run it from the src_old folder.
 """
 
 import numpy as np
 import json
-import sys
 
 # run once installed with pip
-try:
-    from lcpv.lcpv import LCPV
-except ModuleNotFoundError:  # just for compatibility
-    sys.path.append("..")
-    from src.lcpv.lcpv import LCPV
+from src.lcpv.edge_process import LCPV
 
 
 def main():
     # firstly, we read the camera calibration parameters
-    with open("../src/camera_calibration/parameters.json", "r") as f:
+    with open("../src/lcpv/calibration/parameters.json", "r") as f:
         camera_params = dict(json.load(f))
     # and convert them to numpy arrays
     camera_params = {k: np.array(v) for k, v in camera_params.items()}

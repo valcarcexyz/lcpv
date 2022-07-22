@@ -2,7 +2,7 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, read_config_file ]
   pull_request:
     branches: [ main ]
 

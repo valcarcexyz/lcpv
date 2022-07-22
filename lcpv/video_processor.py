@@ -23,6 +23,8 @@ class VideoProcessor(base.LcpvTemplate):
 
             if ret and (frame0 is not None) and (frame1 is not None):
                 if len(frame0.shape) >= 3:
-                    frame0, frame1 = cv2.cvtColor(frame0, cv2.COLOR_RGB2GRAY), cv2.cvtColor(frame1, cv2.COLOR_RGB2GRAY)
+                    frame0 = cv2.cvtColor(frame0, cv2.COLOR_RGB2GRAY)
+                if len(frame1.shape) >= 3:
+                    frame1 = cv2.cvtColor(frame1, cv2.COLOR_RGB2GRAY)
 
-            self.process_frames(frame0, frame1, camera_params=camera_params, *args, **kwargs)
+                self.process_frames(frame0, frame1, camera_params=camera_params, *args, **kwargs)

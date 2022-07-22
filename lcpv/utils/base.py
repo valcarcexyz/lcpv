@@ -3,6 +3,8 @@ from functools import wraps
 import numpy as np
 from openpiv.pyprocess import extended_search_area_piv, get_coordinates
 
+import matplotlib.pyplot as plt
+
 from ..preprocessing import median_filter, opening_filter, correct_lens_distortion, correct_perspective_distortion
 
 

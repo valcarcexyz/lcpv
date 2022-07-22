@@ -8,6 +8,5 @@ venv/
 __pycache__/
 /.pytest_cache/
 
-data/video.h264
-
 *.egg-info
+/build

@@ -32,9 +32,9 @@ def correct_lens_distortion(img):
                                                   np.array(HQ_CAMERA_PARAMS["cameraMatrix"]),
                                                   np.array(HQ_CAMERA_PARAMS["distCoeff"]))
 def correct_image_perspective(img):
-    return lens_corrector.correct_perspective(img,
-                                              np.array(HQ_CAMERA_PARAMS["originalPoints"], dtype=np.float32),
-                                              np.array(HQ_CAMERA_PARAMS["destinationPoints"], dtype=np.float32))
+    return lens_corrector.correct_perspective_distortion(img,
+                                                         np.array(HQ_CAMERA_PARAMS["originalPoints"], dtype=np.float32),
+                                                         np.array(HQ_CAMERA_PARAMS["destinationPoints"], dtype=np.float32))
 
 
 # store all them in a list to be run in a loop

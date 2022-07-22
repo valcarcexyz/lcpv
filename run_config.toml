@@ -1,0 +1,48 @@
+entrypoint = "/path/to/video" # path or null to record
+
+[video_recording]
+adquire_calibration_frame = true
+resolution = [1080, 720]
+fps = 20
+duration = 2 # video seconds duration
+n_videos = 20 # number of videos to be recorded
+interval = 5 # seconds between videos
+
+[preprocessing]
+adquire_calibration_frame = true
+
+[preprocessing.camera_calibration]
+original_points = []
+destiantion_points = []
+
+[preprocessing.filter]
+filter = "opening" # opening/median
+# filter params
+
+[piv]
+window_size = 32
+seach_area_size = 32
+overlap = 16
+dt = 1
+
+[piv.noise]
+extract = true
+method = "peak2peak"
+
+[postprocessing]
+scale_velocities = true
+low_correlation_filter_threshold = 0.15
+
+[postprocessing.spatial_filter]
+method = ""
+max_iterations = 1
+kernel = [3, 3]
+
+[postprocessing.minmax]
+u = [-100, 100]
+v = [-100, 100]
+
+[outputs]
+folder = "path/to/output/folder"
+type_coordinates = "" # rectified px, metros...
+n_areas = 2

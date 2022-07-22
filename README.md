@@ -10,7 +10,7 @@ and [OpenPIV](https://github.com/OpenPIV/openpiv-python) with the
 main goal of running as fast as possible in a Raspberry Pi 4. This package is meant to process the images
 as shown in the following image:
 
-![Pipeline](doc/assets/pipeline.svg)
+![Pipeline](docs/assets/pipeline.svg)
 
 We have a main thread that just runs the camera capture process. This is like that due to the 
 importance of capturing the frames over processing them in real time. Threads were selected (instead of processes)

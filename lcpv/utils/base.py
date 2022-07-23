@@ -1,9 +1,6 @@
-from functools import wraps
-
-import numpy as np
 from openpiv.pyprocess import extended_search_area_piv, get_coordinates
-
-import matplotlib.pyplot as plt
+from functools import wraps
+import numpy as np
 
 from ..preprocessing import median_filter, opening_filter, correct_lens_distortion, correct_perspective_distortion
 
@@ -94,7 +91,7 @@ class LcpvTemplate:
         x, y = get_coordinates(image_size=frame0.shape,
                                search_area_size=kwargs["search_area_size"],
                                overlap=kwargs["overlap"])
-        valid = s2n < np.percentile(s2n, 5)
+        valid = s2n > np.percentile(s2n, 5)
 
         if len(self.results["x"]) == 0:  # so we do not add the same multiple times (as `x` and `y` are constant).
             self.results["x"].append(x[valid])
@@ -106,6 +103,7 @@ class LcpvTemplate:
     @property
     def median_results(self):
         """Median results of the OpenPIV process"""
-        x, y, u, v = self.results["x"], self.results["y"], self.results["u"], self.results["v"]
+        x, y, u, v = self.results["x"], self.results["y"], np.nanmedian(self.results["u"]), np.nanmedian(self.results["v"])
         assert (x and y and u and v), "Not yet computed"
+
         return x, y, np.nanmedian(u, axis=0), np.nanmedian(v, axis=0)

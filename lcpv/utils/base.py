@@ -1,4 +1,6 @@
+import matplotlib.pyplot as plt
 from openpiv.pyprocess import extended_search_area_piv, get_coordinates
+from typing import Callable
 from functools import wraps
 import numpy as np
 
@@ -13,6 +15,7 @@ class LcpvTemplate:
 
     def __init__(self, *args, **kwargs):
         self.results = {"x": [], "y": [], "u": [], "v": []}
+        self.frame0 = None
 
     @staticmethod
     def _twice(func):
@@ -42,8 +45,10 @@ class LcpvTemplate:
     def median_filter(self, *args, **kwargs):
         return median_filter(*args, **kwargs)
 
-    def process_frames(self, frame0: np.ndarray, frame1: np.ndarray, camera_params: dict = None, *args,
-                       **kwargs) -> None:
+    def process_frames(self, frame0: np.ndarray, frame1: np.ndarray,
+                       camera_params: dict = None,
+                       preprocessing_filter: str = "opening_filter", preprocessing_filter_params: dict = {},
+                       *args, **kwargs) -> None:
         """
         Consumer method (static) that process the frames of a video in pairs. The optional `args` and `kwargs` are
         by no means optional, they must include all the needed arguments to run the `openpiv.pyprocess_extended`
@@ -63,6 +68,8 @@ class LcpvTemplate:
             frame1: np.ndarray. Second frame.
             camera_params: dict. Dictionary containing (or not):
                 `camera_matrix`, `dist_coeff`, `original_points`, `destination_points`
+            preprocessing_filter: Callable. A function that takes both frames and returns them
+            preprocessing_filter_params:
 
         Returns:
             None
@@ -76,34 +83,48 @@ class LcpvTemplate:
         if {"camera_matrix", "dist_coeff"} <= camera_params_set:
             # we have the minimum requirements to run the lens correction
             frame0, frame1 = self.lens_distortion(frame0, frame1,
-                                                  camera_params["camera_matrix"], camera_params["dist_coeff"])
+                                                  camera_params["camera_matrix"].astype(np.float32),
+                                                  camera_params["dist_coeff"].astype(np.float32))
 
         if {"original_points", "destination_points"} <= camera_params_set:
             # we have the minimum requirements to run the perspective correction
             frame0, frame1 = self.correct_perspective_distortion(frame0, frame1,
-                                                                 camera_params["original_points"],
-                                                                 camera_params["destination_points"])
+                                                                 camera_params["original_points"].astype(np.float32),
+                                                                 camera_params["destination_points"].astype(np.float32))
+
+        # we store a copy of the first frame to plot the results
+        if self.frame0 is None:
+            self.frame0 = frame0
 
         # once the images are preprocessed, we can binarize them
-        frame0, frame1 = self.opening_filter(frame0, frame1, kernel_size=7, threshold=220)
+        preprocessing_filter = getattr(self, preprocessing_filter, lambda _x, _y, **_: (_x, _y))
+        frame0, frame1 = preprocessing_filter(frame0, frame1, **preprocessing_filter_params)
 
         u, v, s2n = extended_search_area_piv(frame0, frame1, *args, **kwargs)
         x, y = get_coordinates(image_size=frame0.shape,
                                search_area_size=kwargs["search_area_size"],
                                overlap=kwargs["overlap"])
         valid = s2n > np.percentile(s2n, 5)
+        u[~valid] = np.nan
+        v[~valid] = np.nan
 
         if len(self.results["x"]) == 0:  # so we do not add the same multiple times (as `x` and `y` are constant).
-            self.results["x"].append(x[valid])
-            self.results["y"].append(y[valid])
+            self.results["x"].append(x)
+            self.results["y"].append(y)
 
-        self.results["u"].append(u[valid])
-        self.results["v"].append(-v[valid])
+        self.results["u"].append(u)
+        self.results["v"].append(-v)
 
     @property
     def median_results(self):
         """Median results of the OpenPIV process"""
-        x, y, u, v = self.results["x"], self.results["y"], np.nanmedian(self.results["u"]), np.nanmedian(self.results["v"])
-        assert (x and y and u and v), "Not yet computed"
+        x, y = self.results["x"], self.results["y"]
+        u, v = np.nanmedian(self.results["u"], axis=0), np.nanmedian(self.results["v"], axis=0)
+        return x, y, u, v
 
-        return x, y, np.nanmedian(u, axis=0), np.nanmedian(v, axis=0)
+    def show(self):
+        if self.frame0 is not None:
+            x, y, u, v = self.median_results
+            plt.imshow(self.frame0, cmap="gray")
+            plt.quiver(x, y, u, v)
+            plt.show()

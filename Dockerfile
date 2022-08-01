@@ -5,4 +5,3 @@ COPY . .
 
 # update and install the requirements
 RUN pip install .
-ENTRYPOINT ["python", "run.py"]

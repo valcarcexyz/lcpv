@@ -33,4 +33,7 @@ class VideoProcessor(base.LcpvTemplate):
 
                     self.process_frames(frame0, frame1, camera_params=camera_params, *args, **kwargs)
 
+                elif not ret:
+                    capture.release()
+
                 pbar.update(1)

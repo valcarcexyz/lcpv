@@ -45,11 +45,6 @@ def main():
         vp.start(filename=entrypoint, camera_params=camera_params,
                  preprocessing_filter=preprocessing_filter, preprocessing_filter_params=filter_params,
                  **piv_params)
-        #
-        print([np.nanmean(u) for u in vp.results["u"]])
-        print([np.nanmean(v) for v in vp.results["v"]])
-
-        vp.show()
 
     else:
         # We should try to run the raspberry processor

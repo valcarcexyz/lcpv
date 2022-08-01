@@ -1,4 +1,8 @@
-numpy
-openpiv
-opencv-python
-toml
+numpy>=1.23.1
+openpiv>=0.24.2
+opencv-python>=4.6.0.66
+toml>=0.10.2
+
+matplotlib>=3.5.2
+tqdm>=4.64.0
+setuptools>=60.2.0

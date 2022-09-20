@@ -1,10 +1,9 @@
-from setuptools import setup, find_packages
+from setuptools import setup 
 
 setup(
     name='lcpv',
     version='0.1',
-    package_dir={"": "src"},
-    packages=find_packages(where="src"),
+    package_dir={"": "lcpv"},
     url='https://github.com/valcarce01/lcpv',
     license='',
     author='Diego Valcarce Ríos,\

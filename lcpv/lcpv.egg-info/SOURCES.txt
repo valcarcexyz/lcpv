@@ -1,0 +1,7 @@
+README.md
+setup.py
+lcpv/lcpv.egg-info/PKG-INFO
+lcpv/lcpv.egg-info/SOURCES.txt
+lcpv/lcpv.egg-info/dependency_links.txt
+lcpv/lcpv.egg-info/requires.txt
+lcpv/lcpv.egg-info/top_level.txt

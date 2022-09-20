@@ -4,6 +4,7 @@
 from collections.abc import Callable
 from openpiv.pyprocess import extended_search_area_piv, get_coordinates
 import numpy as np
+import cv2
 import os
 
 from tqdm import tqdm
@@ -78,6 +79,9 @@ class LCPV():
                 ret, frame1 = capture.read()
 
                 if ret and (frame0 is not None) and (frame1 is not None):
+                    if len(frame0.shape) != 2:
+                        frame0 = cv2.cvtColor(frame0, cv2.COLOR_RGB2GRAY)
+
                     if len(frame1.shape) != 2:
                         frame1 = cv2.cvtColor(frame1, cv2.COLOR_RGB2GRAY)
 

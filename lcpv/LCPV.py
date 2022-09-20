@@ -4,6 +4,9 @@
 from collections.abc import Callable
 from openpiv.pyprocess import extended_search_area_piv, get_coordinates
 import numpy as np
+import os
+
+from tqdm import tqdm
 
 
 class LCPV():
@@ -57,6 +60,31 @@ class LCPV():
         ) -> None:
         """"""
     
-    def process_video(self) -> None:
+    def process_video(self, filename: str) -> None:
         """"""
+        if not os.path.exists(filename):
+            raise FileNotFoundError(f"File {filename} not found")
+
+        capture = cv2.VideoCapture(filename)
+        if not capture.isOpened():
+            raise IOError(f"Error opening {filename}")
+
+        n_frames = capture.get(cv2.CAP_PROP_FRAME_COUNT)
+        frame0, frame1 = None, None
+
+        with tqdm(total=n_frames) as pbar:
+            while capture.isOpened():
+                frame0 = frame1
+                ret, frame1 = capture.read()
+
+                if ret and (frame0 is not None) and (frame1 is not None):
+                    if len(frame1.shape) != 2:
+                        frame1 = cv2.cvtColor(frame1, cv2.COLOR_RGB2GRAY)
+
+                    self._consume_frames(frame0, frame1)
+
+                elif not ret:
+                    capture.release()
+
+                pbar.update(1)
 

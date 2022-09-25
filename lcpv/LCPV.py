@@ -51,6 +51,7 @@ class LCPV():
         )
         self.postprocessing = lambda x: postprocessing_filter(x, postprocessing_filter_args)
         self.results = {"x": [], "y": [], "u": [], "v": []}
+        self._frames = []
 
     def _piv(self, frame0: np.ndarray, frame1: np.ndarray, *args, **kwargs):
         u, v, _ = extended_search_area_piv(frame0, frame1, *args, **kwargs)
@@ -70,11 +71,18 @@ class LCPV():
         self.results["u"].append(u)
         self.results["v"].append(v)
 
+    def _process_camera_frames(self, frame: np.ndarray):
+        """Utility function that checks if there is at least a pair of frames 
+        to process, otherwise, just waits to the next epoch"""
+        if len(self._frames) >= 1:
+            self._consume_frames(self._frames.pop(), frame)
+        self._frames.append(frame)
+
+
     def process_camera(self,
             resolution: tuple = (1920, 1080),
             fps: int = 24,
             seconds: int = 1,
-            process_output: Callable = lambda x: x,
         ) -> None:
         """
         Params:
@@ -91,7 +99,7 @@ class LCPV():
             resolution=resolution,
             framerate=fps,
             seconds=seconds,
-            process_output=process_output,
+            process_output=self._process_camera_frames,
         )
     
     def process_video(self, filename: str) -> None:

@@ -14,5 +14,7 @@ setup(
     author_email='d.valcarce@udc.es',
     description='Low cost (Rasperry-based) particle velociemtry',
     install_requires=[line.strip() for line in open("requirements.txt").readlines()],
-    # todo: add the tests
+    extras_require={
+        "raspberry": ["picamera"],
+    },
 )

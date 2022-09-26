@@ -1,0 +1,5 @@
+numpy==1.22.3
+opencv-python==4.5.5.64
+OpenPIV==0.23.8
+Pillow==9.2.0
+tqdm==4.63.0

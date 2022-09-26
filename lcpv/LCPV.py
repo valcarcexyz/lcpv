@@ -9,7 +9,6 @@ import os
 from tqdm import tqdm
 
 from .camera import Camera
-from lcpv import camera
 
 
 class LCPV():

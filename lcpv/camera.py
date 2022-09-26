@@ -3,7 +3,12 @@ from typing import Callable
 
 import multiprocessing as mp
 import numpy as np
-import picamera
+
+try:
+    import picamera 
+except ModuleNotFoundError:
+    import warnings
+    warnings.warn("`picamera` module not found, the code will not be able to be run from the camera in the Raspberry")
 
 
 class Camera:
